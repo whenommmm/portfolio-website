@@ -1,0 +1,419 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================================
+   UNIFIED DESIGN SYSTEM — Vansh Srivastava Portfolio
+   Merges tokens from all 5 cinematic sub-repos + homepage
+   ============================================================ */
+
+@theme inline {
+  /* ── Fonts ── */
+  --font-sans:       "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display:    "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:       "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-pressstart: "Press Start 2P", monospace;
+  --font-pixel:      "VT323", ui-monospace, monospace;
+  --font-serif:      "Fraunces", "Cormorant Garamond", ui-serif, Georgia, serif;
+
+  /* ── Radius ── */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  /* ── Cinematic semantic tokens (shared across all pages) ── */
+  --color-background:      var(--background);
+  --color-foreground:      var(--foreground);
+  --color-card:            var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover:         var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary:         var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary:       var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:           var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent:          var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive:     var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:          var(--border);
+  --color-input:           var(--input);
+  --color-ring:            var(--ring);
+
+  /* ── Glow colors (cinematic-journeys / cinematic-contact-point) ── */
+  --color-amber-glow:  var(--amber-glow);
+  --color-cyan-glow:   var(--cyan-glow);
+  --color-peach-glow:  var(--peach-glow);
+  --color-purple-glow: var(--purple-glow);
+  --color-glow:        var(--glow);
+  --color-glow-soft:   var(--glow-soft);
+
+  /* ── cinematic-contact-point ink tokens ── */
+  --color-ink:            var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted:      var(--ink-muted);
+  --color-cream:          var(--cream);
+  --color-glow-amber:     var(--glow-amber);
+
+  /* ── Retro homepage tokens ── */
+  --color-retro-blue:   #5c94fc;
+  --color-retro-orange: #fc9838;
+  --color-retro-green:  #00a800;
+  --color-retro-brown:  #a80000;
+
+  /* ── Shadows ── */
+  --shadow-amber-glow: 0 0 24px -6px color-mix(in oklab, var(--glow-amber) 65%, transparent);
+  --shadow-card-glow:  0 24px 60px -30px color-mix(in oklab, var(--glow-amber) 50%, transparent);
+
+  /* ── Animations ── */
+  --animate-fade-in:      fade-in 0.9s ease-out;
+  --animate-fade-in-up:   fade-in-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-twinkle:      twinkle 6s ease-in-out infinite;
+  --animate-grid-pan:     grid-pan 30s linear infinite;
+  --animate-ambient-pulse: ambient-pulse 8s ease-in-out infinite;
+  --animate-float-slow:   float-slow 14s ease-in-out infinite;
+}
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+:root {
+  --radius: 0.875rem;
+
+  /* ── Cinematic dark navy base (shared across all sub-repos) ── */
+  --background:              oklch(0.13 0.04 270);   /* #060816 deep navy */
+  --foreground:              oklch(0.96 0.01 240);
+  --card:                    oklch(0.17 0.04 268);
+  --card-foreground:         oklch(0.96 0.01 240);
+  --popover:                 oklch(0.17 0.04 268);
+  --popover-foreground:      oklch(0.96 0.01 240);
+  --primary:                 oklch(0.82 0.14 70);    /* warm amber */
+  --primary-foreground:      oklch(0.15 0.04 270);
+  --secondary:               oklch(0.22 0.05 270);
+  --secondary-foreground:    oklch(0.96 0.01 240);
+  --muted:                   oklch(0.22 0.04 268);
+  --muted-foreground:        oklch(0.72 0.03 250);   /* muted blue-gray */
+  --accent:                  oklch(0.72 0.13 250);   /* electric blue */
+  --accent-foreground:       oklch(0.13 0.04 270);
+  --destructive:             oklch(0.62 0.22 25);
+  --destructive-foreground:  oklch(0.98 0 0);
+  --border:                  oklch(1 0 0 / 8%);
+  --input:                   oklch(1 0 0 / 12%);
+  --ring:                    oklch(0.82 0.14 70 / 60%);
+
+  /* ── Glow tokens (cinematic-journeys) ── */
+  --amber-glow:   oklch(0.82 0.16 65);
+  --peach-glow:   oklch(0.86 0.10 50);
+  --cyan-glow:    oklch(0.82 0.12 220);
+  --purple-glow:  oklch(0.62 0.16 285);
+  --glow:         oklch(0.82 0.14 75);
+  --glow-soft:    oklch(0.72 0.13 250);
+
+  /* ── cinematic-contact-point ink tokens ── */
+  --ink:            oklch(0.18 0.035 250);
+  --ink-foreground: oklch(0.96 0.015 80);
+  --ink-muted:      oklch(0.72 0.025 250);
+  --cream:          oklch(0.95 0.04 85);
+  --glow-amber:     oklch(0.82 0.16 70);
+  --grid:           oklch(0.85 0.04 230);
+
+  /* ── cinematic-resume-archive tokens ── */
+  --cinematic-navy:      oklch(0.16 0.035 260);
+  --cinematic-navy-deep: oklch(0.11 0.03 265);
+  --cinematic-amber:     oklch(0.83 0.13 75);
+  --cinematic-cream:     oklch(0.96 0.04 85);
+  --cinematic-glow:      oklch(0.78 0.15 65);
+
+  /* ── Gradients ── */
+  --gradient-hero: linear-gradient(
+    100deg,
+    oklch(0.98 0.02 90) 0%,
+    oklch(0.92 0.10 75) 35%,
+    oklch(0.82 0.16 55) 65%,
+    oklch(0.72 0.18 35) 100%
+  );
+  --gradient-amber: radial-gradient(
+    circle at 30% 20%,
+    oklch(0.82 0.16 65 / 0.55),
+    transparent 60%
+  );
+  --gradient-cyan: radial-gradient(
+    circle at 70% 80%,
+    oklch(0.68 0.16 245 / 0.45),
+    transparent 60%
+  );
+  --gradient-card: linear-gradient(
+    160deg,
+    oklch(0.22 0.05 270 / 0.7) 0%,
+    oklch(0.14 0.04 268 / 0.7) 100%
+  );
+  --gradient-title:  linear-gradient(135deg, oklch(0.96 0.04 85), oklch(0.83 0.13 75));
+  --gradient-primary: linear-gradient(135deg, oklch(0.82 0.14 75) 0%, oklch(0.74 0.13 50) 100%);
+  --gradient-aurora:
+    radial-gradient(ellipse 75% 55% at 18% 0%, oklch(0.72 0.13 250 / 0.18), transparent 65%),
+    radial-gradient(ellipse 65% 55% at 82% 18%, oklch(0.82 0.14 75 / 0.14), transparent 65%),
+    radial-gradient(ellipse 85% 65% at 50% 100%, oklch(0.74 0.13 50 / 0.10), transparent 70%);
+  --gradient-text: linear-gradient(135deg, oklch(0.97 0.005 240) 0%, oklch(0.82 0.14 75) 55%, oklch(0.74 0.13 50) 100%);
+
+  /* ── Shadows ── */
+  --shadow-card:         0 30px 80px -30px oklch(0 0 0 / 0.7), 0 0 0 1px oklch(1 0 0 / 0.04);
+  --shadow-amber-local:  0 0 80px -10px oklch(0.82 0.16 65 / 0.45);
+  --shadow-cyan-local:   0 0 80px -10px oklch(0.68 0.16 245 / 0.4);
+  --shadow-cinematic:    0 30px 80px -20px oklch(0.05 0.02 260 / 0.8), 0 0 60px oklch(0.78 0.15 65 / 0.08);
+  --shadow-glow-amber:   0 0 40px oklch(0.78 0.15 65 / 0.35);
+  --shadow-soft:         0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 24px 70px -24px oklch(0 0 0 / 0.6);
+  --shadow-glow:         0 0 50px -10px oklch(0.82 0.14 75 / 0.3), 0 0 90px -30px oklch(0.74 0.13 50 / 0.25);
+
+  /* ── Cinematic bg raw hex (for JS usage in pixel-playground) ── */
+  --bg-deep: #060816;
+  --bg-mid:  #0B1020;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+@layer base {
+  * { border-color: var(--color-border); }
+
+  html {
+    background: var(--bg-deep);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Homepage: game canvas is full-screen with overflow hidden */
+  body.game-page {
+    overflow: hidden;
+    user-select: none;
+  }
+}
+
+/* ============================================================
+   UTILITY CLASSES (merged from all sub-repos)
+   ============================================================ */
+@layer utilities {
+
+  /* ── Text gradients (cinematic-journeys) ── */
+  .text-gradient-hero {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 40px oklch(0.82 0.16 65 / 0.35));
+  }
+
+  /* ── Text gradients (pixel-playground / project cards) ── */
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-amber {
+    background: linear-gradient(95deg, #FFF6E3 0%, #FFD89B 30%, #FFA85C 65%, #C46A2E 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-card-amber {
+    background: linear-gradient(95deg, #FFF1D6 0%, #FFB84D 60%, #C9701F 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-card-blue {
+    background: linear-gradient(95deg, #EAF3FF 0%, #5DA9FF 60%, #1E5BAD 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-card-violet {
+    background: linear-gradient(95deg, #F0E9FF 0%, #B8A3FF 55%, #6E4FCF 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-card-cyan {
+    background: linear-gradient(95deg, #EAFFF7 0%, #7DDCC8 55%, #2E8C7A 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+
+  /* ── Glass card (cinematic-journeys) ── */
+  .glass-card {
+    background: var(--gradient-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(1 0 0 / 0.07);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ── Simpler glass (pixel-playground) ── */
+  .glass {
+    background: color-mix(in oklab, var(--card) 70%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Grid backgrounds ── */
+  .bg-grid-cinematic {
+    background-image:
+      linear-gradient(oklch(1 0 0 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(1 0 0 / 0.045) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(oklch(0.95 0.02 90 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.95 0.02 90 / 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%);
+  }
+
+  /* ── Aurora background ── */
+  .bg-aurora { background-image: var(--gradient-aurora); }
+
+  /* ── Glow shadows ── */
+  .glow-amber { box-shadow: 0 0 60px -10px rgba(255, 184, 77, 0.45), 0 0 24px -8px rgba(255, 154, 108, 0.4); }
+  .glow-blue  { box-shadow: 0 0 60px -10px rgba(93, 169, 255, 0.5),  0 0 24px -8px rgba(93, 169, 255, 0.35); }
+  .glow-violet{ box-shadow: 0 0 60px -10px rgba(167, 139, 250, 0.45),0 0 24px -8px rgba(125, 110, 230, 0.35); }
+  .glow-cyan  { box-shadow: 0 0 60px -10px rgba(120, 220, 220, 0.45),0 0 24px -8px rgba(95, 200, 200, 0.35); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-amber-glow { box-shadow: var(--shadow-amber-glow); }
+
+  /* ── Pixel art utilities (retro homepage) ── */
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .pixel-border {
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 0 0 4px var(--background),
+      0 0 0 5px var(--border);
+  }
+  .font-pixel { font-family: var(--font-pixel); letter-spacing: 0.02em; }
+
+  /* ── Retro button (homepage) ── */
+  .retro-border {
+    border: 4px solid #000;
+    box-shadow: 4px 4px 0px #000;
+  }
+  .retro-btn {
+    border: 3px solid #000;
+    box-shadow: 3px 3px 0px #000;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .retro-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
+  }
+
+  /* ── Scanlines overlay ── */
+  .scanlines::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      oklch(0 0 0 / 0.06) 3px
+    );
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* ── Animate utilities ── */
+  .animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-rise    { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .animate-blink   { animation: blink 1s steps(2) infinite; }
+  .animate-float   { animation: float-up linear infinite; }
+  .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+  .animate-shimmer {
+    background-size: 200% 200%;
+    animation: shimmer 6s ease-in-out infinite;
+  }
+  .animate-grid-drift { animation: grid-drift 20s linear infinite; }
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS (merged from all repos)
+   ============================================================ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.85; }
+}
+@keyframes grid-pan {
+  from { background-position: 0 0; }
+  to   { background-position: 80px 80px; }
+}
+@keyframes grid-drift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.06); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50%      { transform: translateY(-18px) translateX(8px); }
+}
+@keyframes float-up {
+  0%   { transform: translateY(110vh) translateX(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 0.9; transform: scale(1.05); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes blink {
+  0%, 60% { opacity: 1; } 61%, 100% { opacity: 0; }
+}
+
+/* ============================================================
+   PHASER CANVAS STYLES (retro homepage)
+   ============================================================ */
+#phaser-game canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
