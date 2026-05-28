@@ -204,6 +204,28 @@ export default class MainScene extends Phaser.Scene {
     };
     EventBus.on('close-modal', closeModalListener);
 
+    // Listen for returning from a portfolio page → resume gameplay seamlessly
+    // (game-resumed is emitted by PersistentGame in App.jsx when isVisible → true)
+    const gameResumedListener = () => {
+      // Clear any stuck key state from before navigation
+      this.keysPressed.left = false;
+      this.keysPressed.right = false;
+      this.keysPressed.up = false;
+      // Unpause the scene input (isPaused was never set on navigation,
+      // but ensure it's cleared in case of any edge case)
+      this.isPaused = false;
+      // Re-zero velocity so the player isn't sliding on return
+      if (this.player) {
+        this.player.setVelocityX(0);
+        this.player.setTint(0xffffff);
+      }
+      // Refocus canvas so keyboard events are captured immediately
+      if (this.game && this.game.canvas) {
+        setTimeout(() => this.game.canvas.focus(), 50);
+      }
+    };
+    EventBus.on('game-resumed', gameResumedListener);
+
     // Listen for mute toggle from React controls
     EventBus.clear('toggle-mute');
     this.isMuted = false;
@@ -218,6 +240,7 @@ export default class MainScene extends Phaser.Scene {
       window.removeEventListener('keydown', audioInitHandler);
       window.removeEventListener('pointerdown', audioInitHandler);
       EventBus.off('close-modal', closeModalListener);
+      EventBus.off('game-resumed', gameResumedListener);
       EventBus.off('toggle-mute', muteListener);
     };
 

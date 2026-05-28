@@ -1,36 +1,64 @@
 import React, { useEffect, useRef } from 'react';
 import { startPhaserGame } from './PhaserGame';
+import { EventBus } from './EventBus';
 import { Volume2, VolumeX } from 'lucide-react';
 
 export default function GameContainer({ isMuted, toggleMute }) {
   const gameRef = useRef(null);
 
   useEffect(() => {
-    // Prevent double instantiation during development Hot Module Reloading
+    // Create the Phaser instance exactly once.
+    // GameContainer is now always-mounted (never unmounted by routing),
+    // so this cleanup intentionally does NOT call game.destroy().
+    // The game persists for the entire session — state is never lost.
     if (!gameRef.current) {
       gameRef.current = startPhaserGame('phaser-game');
     }
 
-    return () => {
+    // Pause/resume scene physics + input when the game canvas is
+    // hidden (player is on a portfolio page) to save CPU cycles.
+    const onHidden = () => {
       if (gameRef.current) {
-        gameRef.current.destroy(true);
-        gameRef.current = null;
+        gameRef.current.scene.scenes.forEach((scene) => {
+          if (scene.scene.isActive()) {
+            scene.scene.pause();
+          }
+        });
       }
+    };
+
+    const onResumed = () => {
+      if (gameRef.current) {
+        gameRef.current.scene.scenes.forEach((scene) => {
+          if (scene.scene.isPaused()) {
+            scene.scene.resume();
+          }
+        });
+      }
+    };
+
+    const unsubHidden = EventBus.on('game-hidden', onHidden);
+    const unsubResumed = EventBus.on('game-resumed', onResumed);
+
+    // No game.destroy() on unmount — persistence is the entire point.
+    return () => {
+      unsubHidden();
+      unsubResumed();
     };
   }, []);
 
   return (
     <div className="w-full h-full flex items-center justify-center bg-[#111] p-2 sm:p-4">
-      <div 
-        id="phaser-game" 
+      <div
+        id="phaser-game"
         className="w-full max-h-full aspect-[16/9] relative flex items-center justify-center"
       >
-        {/* Mute Controls Overlay - aligned with Phaser canvas bounds inside the bezel */}
+        {/* Mute Controls Overlay */}
         <div className="absolute top-4 right-4 z-10">
-          <button 
+          <button
             onClick={toggleMute}
             className="p-2 retro-btn bg-[#282828] hover:bg-[#383838] text-white flex items-center justify-center cursor-pointer"
-            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+            title={isMuted ? 'Unmute sounds' : 'Mute sounds'}
           >
             {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>

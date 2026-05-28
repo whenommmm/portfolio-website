@@ -189,43 +189,67 @@ export default function ContactPage() {
             style={{ background: 'var(--glow-amber)', boxShadow: '0 0 24px var(--glow-amber)' }}
           />
 
-          {METHODS.map((m, i) => {
-            const angle = -90 + i * (360 / METHODS.length);
-            const rad = (angle * Math.PI) / 180;
-            const x = 50 + Math.cos(rad) * 42;
-            const y = 50 + Math.sin(rad) * 42;
-            return (
-              <a
-                key={m.label}
-                href={m.href}
-                target={m.external ? '_blank' : undefined}
-                rel={m.external ? 'noopener noreferrer' : undefined}
-                style={{
-                  left: `${x}%`,
-                  top: `${y}%`,
-                  animationDelay: `${420 + i * 110}ms`,
-                  animationFillMode: 'both',
-                }}
-                className="group absolute -translate-x-1/2 -translate-y-1/2 animate-fade-in"
-              >
-                <div className="relative flex flex-col items-center gap-3">
-                  <div className="relative grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-cream backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-glow-amber group-hover:shadow-amber-glow sm:h-24 sm:w-24">
-                    <m.icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />
-                    <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5" />
-                    <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-glow-amber group-hover:opacity-100" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-mono text-[9px] tracking-[0.3em] text-ink-muted sm:text-[10px]">
-                      {m.label.toUpperCase()}
-                    </div>
-                    <div className="mt-1 max-w-[140px] truncate text-[11px] text-ink-foreground/80 transition-colors group-hover:text-ink-foreground sm:text-[12px]">
-                      {m.value}
-                    </div>
+          {/* Rotating HUD Rings */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/5 animate-orbit-ring-counter"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dotted border-white/10 animate-orbit-ring-slow"
+          />
+
+          {/* Orbiting Contact Nodes wrapper */}
+          <div className="absolute inset-0 animate-orbit-slow">
+            {METHODS.map((m, i) => {
+              const angle = -90 + i * (360 / METHODS.length);
+              const rad = (angle * Math.PI) / 180;
+              const x = 50 + Math.cos(rad) * 42;
+              const y = 50 + Math.sin(rad) * 42;
+              return (
+                <div
+                  key={m.label}
+                  style={{
+                    left: `${x}%`,
+                    top: `${y}%`,
+                    position: 'absolute',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <div
+                    style={{
+                      animationDelay: `${420 + i * 110}ms`,
+                      animationFillMode: 'both',
+                    }}
+                    className="animate-fade-in"
+                  >
+                    <a
+                      href={m.href}
+                      target={m.external ? '_blank' : undefined}
+                      rel={m.external ? 'noopener noreferrer' : undefined}
+                      className="group block animate-orbit-counter-slow"
+                    >
+                      <div className="relative flex flex-col items-center gap-3">
+                        <div className="relative grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-cream backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-glow-amber group-hover:shadow-amber-glow sm:h-24 sm:w-24">
+                          <m.icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />
+                          <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5" />
+                          <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-glow-amber group-hover:opacity-100" />
+                        </div>
+                        <div className="text-center">
+                          <div className="font-mono text-[9px] tracking-[0.3em] text-ink-muted sm:text-[10px]">
+                            {m.label.toUpperCase()}
+                          </div>
+                          <div className="mt-1 max-w-[140px] truncate text-[11px] text-ink-foreground/80 transition-colors group-hover:text-ink-foreground sm:text-[12px]">
+                            {m.value}
+                          </div>
+                        </div>
+                      </div>
+                    </a>
                   </div>
                 </div>
-              </a>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
