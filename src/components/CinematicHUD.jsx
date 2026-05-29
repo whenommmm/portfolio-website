@@ -79,8 +79,8 @@ export default function CinematicHUD() {
   const currentIdx  = ROUTES.findIndex((r) => location.pathname === r.path);
   const current     = ROUTES[currentIdx] ?? null;
 
-  // Hide top return button on /projects — bottom return block guides the user instead
-  const hideTopReturn = location.pathname === '/projects';
+  // Hide top return button on all portfolio pages — each has its own bottom return block
+  const hideTopReturn = location.pathname !== '/';
 
   return (
     <header

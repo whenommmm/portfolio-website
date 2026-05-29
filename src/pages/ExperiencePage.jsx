@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 // ── Experience data ───────────────────────────────────────────────────────────
 const experiences = [
   {
@@ -280,6 +281,7 @@ function Closing() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ExperiencePage() {
+  const navigate = useNavigate();
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <BackgroundFX />
@@ -326,8 +328,58 @@ export default function ExperiencePage() {
         <Closing />
       </main>
 
-      <footer className="relative z-10 mx-auto max-w-6xl px-6 py-12 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Vansh Srivastava — Crafted with care.
+      {/* ── Return to World ───────────────────────────────────────── */}
+      <footer className="relative z-10 pb-16 flex flex-col items-center gap-8 text-center">
+        <div
+          className="h-px w-48"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(255,184,77,0.35), transparent)' }}
+        />
+        <div className="flex flex-col items-center gap-2">
+          <span
+            className="font-mono text-[9px] uppercase tracking-[0.35em]"
+            style={{ color: 'oklch(0.82 0.16 65 / 0.40)' }}
+          >
+            Section complete
+          </span>
+          <p className="font-display text-sm tracking-wide" style={{ color: 'oklch(0.97 0.005 240 / 0.55)' }}>
+            Ready to continue the journey?
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/')}
+          className="group relative inline-flex items-center gap-3 rounded-full px-8 py-3.5 font-mono text-[11px] uppercase tracking-[0.28em] transition-all duration-500 hover:-translate-y-0.5"
+          style={{
+            border: '1px solid oklch(0.82 0.16 65 / 0.30)',
+            background: 'oklch(0.82 0.16 65 / 0.07)',
+            color: 'oklch(0.88 0.14 72)',
+            boxShadow: '0 0 28px oklch(0.82 0.16 65 / 0.10), inset 0 0 20px oklch(0.82 0.16 65 / 0.03)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.60)';
+            e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.14)';
+            e.currentTarget.style.boxShadow   = '0 0 48px oklch(0.82 0.16 65 / 0.28), inset 0 0 28px oklch(0.82 0.16 65 / 0.06)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.30)';
+            e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.07)';
+            e.currentTarget.style.boxShadow   = '0 0 28px oklch(0.82 0.16 65 / 0.10), inset 0 0 20px oklch(0.82 0.16 65 / 0.03)';
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden>
+            <rect x="4.5" y="0.5" width="3" height="11" rx="0.8" fill="currentColor" opacity="0.65" />
+            <rect x="0.5" y="4.5" width="11" height="3" rx="0.8" fill="currentColor" opacity="0.65" />
+            <circle cx="6" cy="6" r="1.6" fill="currentColor" />
+          </svg>
+          Return to World
+          <span className="relative flex h-[6px] w-[6px] shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full" style={{ background: 'oklch(0.82 0.16 65 / 0.5)' }} />
+            <span className="relative inline-flex h-[6px] w-[6px] rounded-full" style={{ background: 'oklch(0.82 0.16 65)', boxShadow: '0 0 8px oklch(0.82 0.16 65)' }} />
+          </span>
+        </button>
+        <div className="h-px w-24" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)' }} />
+        <p className="font-mono text-[9px] uppercase tracking-[0.3em]" style={{ color: 'oklch(0.97 0.005 240 / 0.20)' }}>
+          End of transmission
+        </p>
       </footer>
     </div>
   );
