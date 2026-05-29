@@ -1,4 +1,5 @@
 import { Play, ArrowUpRight, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { CinematicAtmosphere } from '../components/shared/CinematicAtmosphere';
 
 function GithubIcon({ className }) {
@@ -180,7 +181,7 @@ const projects = [
     achievement: 'Ranked #228 overall and #120 in Enjoyment among 523 entries.',
     links: [
       { label: 'GitHub', href: 'https://github.com/whenommm' },
-      { label: 'Play Demo', href: 'https://itch.io' },
+      { label: 'Play Demo', href: 'https://whenommm.itch.io/pongping' },
     ],
     accent: 'amber',
   },
@@ -198,7 +199,7 @@ const projects = [
     ],
     links: [
       { label: 'GitHub', href: 'https://github.com/whenommm' },
-      { label: 'Play Demo', href: 'https://github.com/whenommm' },
+      { label: 'Play Demo', href: 'https://whenommmm.github.io/falling-blocks-build/' },
     ],
     accent: 'blue',
   },
@@ -229,13 +230,14 @@ const projects = [
       'Progression flow',
       'Platform readability',
     ],
-    links: [{ label: 'Play Demo', href: 'https://gdevelop.io' }],
+    links: [{ label: 'Play Demo', href: 'https://gd.games/games/52c558b6-0bc4-4209-bfc3-84e4d6da34fe' }],
     accent: 'cyan',
   },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ProjectsPage() {
+  const navigate = useNavigate();
   return (
     <main
       className="relative min-h-screen"
@@ -300,9 +302,82 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        <footer className="mt-24 flex flex-col items-center gap-2 text-center">
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/30">
+        {/* ── Return to World ───────────────────────────────────────────────── */}
+        <footer className="mt-24 flex flex-col items-center gap-8 text-center">
+          {/* Top divider */}
+          <div
+            className="h-px w-48"
+            style={{
+              background: 'linear-gradient(to right, transparent, rgba(255,184,77,0.35), transparent)',
+            }}
+          />
+
+          {/* Microcopy */}
+          <div className="flex flex-col items-center gap-2">
+            <span
+              className="font-mono text-[9px] uppercase tracking-[0.35em]"
+              style={{ color: 'oklch(0.82 0.16 65 / 0.40)' }}
+            >
+              Section complete
+            </span>
+            <p
+              className="font-display text-sm tracking-wide"
+              style={{ color: 'oklch(0.97 0.005 240 / 0.55)' }}
+            >
+              Ready to continue the journey?
+            </p>
+          </div>
+
+          {/* Return to World button */}
+          <button
+            onClick={() => navigate('/')}
+            className="group relative inline-flex items-center gap-3 rounded-full px-8 py-3.5 font-mono text-[11px] uppercase tracking-[0.28em] transition-all duration-500 hover:-translate-y-0.5"
+            style={{
+              border: '1px solid oklch(0.82 0.16 65 / 0.30)',
+              background: 'oklch(0.82 0.16 65 / 0.07)',
+              color: 'oklch(0.88 0.14 72)',
+              boxShadow: '0 0 28px oklch(0.82 0.16 65 / 0.10), inset 0 0 20px oklch(0.82 0.16 65 / 0.03)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.60)';
+              e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.14)';
+              e.currentTarget.style.boxShadow   = '0 0 48px oklch(0.82 0.16 65 / 0.28), inset 0 0 28px oklch(0.82 0.16 65 / 0.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.30)';
+              e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.07)';
+              e.currentTarget.style.boxShadow   = '0 0 28px oklch(0.82 0.16 65 / 0.10), inset 0 0 20px oklch(0.82 0.16 65 / 0.03)';
+            }}
+          >
+            {/* D-pad icon */}
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden>
+              <rect x="4.5" y="0.5" width="3" height="11" rx="0.8" fill="currentColor" opacity="0.65" />
+              <rect x="0.5" y="4.5" width="11" height="3" rx="0.8" fill="currentColor" opacity="0.65" />
+              <circle cx="6" cy="6" r="1.6" fill="currentColor" />
+            </svg>
+            Return to World
+            <span
+              className="relative flex h-[6px] w-[6px] shrink-0"
+            >
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full"
+                style={{ background: 'oklch(0.82 0.16 65 / 0.5)' }}
+              />
+              <span
+                className="relative inline-flex h-[6px] w-[6px] rounded-full"
+                style={{ background: 'oklch(0.82 0.16 65)', boxShadow: '0 0 8px oklch(0.82 0.16 65)' }}
+              />
+            </span>
+          </button>
+
+          {/* Bottom rule */}
+          <div
+            className="h-px w-24"
+            style={{
+              background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)',
+            }}
+          />
+          <p className="font-mono text-[9px] uppercase tracking-[0.3em]" style={{ color: 'oklch(0.97 0.005 240 / 0.20)' }}>
             End of transmission
           </p>
         </footer>

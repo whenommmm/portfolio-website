@@ -79,6 +79,9 @@ export default function CinematicHUD() {
   const currentIdx  = ROUTES.findIndex((r) => location.pathname === r.path);
   const current     = ROUTES[currentIdx] ?? null;
 
+  // Hide top return button on /projects — bottom return block guides the user instead
+  const hideTopReturn = location.pathname === '/projects';
+
   return (
     <header
       role="banner"
@@ -170,37 +173,42 @@ export default function CinematicHUD() {
         ) : null}
 
         {/* ── RIGHT: Return-to-game control ───────────────────────────────── */}
-        <button
-          onClick={() => navigate('/')}
-          className="group flex shrink-0 items-center gap-2 rounded-md px-3 py-2 transition-all duration-300"
-          aria-label="Return to the game world"
-          style={{
-            border:     '1px solid oklch(0.82 0.16 65 / 0.22)',
-            background: 'oklch(0.82 0.16 65 / 0.05)',
-            color:      'oklch(0.88 0.14 72 / 0.75)',
-            boxShadow:  '0 0 12px oklch(0.82 0.16 65 / 0.06)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.50)';
-            e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.11)';
-            e.currentTarget.style.color       = 'oklch(0.88 0.14 72)';
-            e.currentTarget.style.boxShadow   = '0 0 22px oklch(0.82 0.16 65 / 0.22)';
-            e.currentTarget.style.transform   = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.22)';
-            e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.05)';
-            e.currentTarget.style.color       = 'oklch(0.88 0.14 72 / 0.75)';
-            e.currentTarget.style.boxShadow   = '0 0 12px oklch(0.82 0.16 65 / 0.06)';
-            e.currentTarget.style.transform   = 'translateY(0)';
-          }}
-        >
-          <DpadIcon />
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase">
-            <span className="hidden sm:inline">Return</span>
-            <span className="sm:hidden">←</span>
-          </span>
-        </button>
+        {hideTopReturn ? (
+          /* Spacer to keep layout balanced when button is hidden */
+          <div className="w-[72px] shrink-0" aria-hidden />
+        ) : (
+          <button
+            onClick={() => navigate('/')}
+            className="group flex shrink-0 items-center gap-2 rounded-md px-3 py-2 transition-all duration-300"
+            aria-label="Return to the game world"
+            style={{
+              border:     '1px solid oklch(0.82 0.16 65 / 0.22)',
+              background: 'oklch(0.82 0.16 65 / 0.05)',
+              color:      'oklch(0.88 0.14 72 / 0.75)',
+              boxShadow:  '0 0 12px oklch(0.82 0.16 65 / 0.06)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.50)';
+              e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.11)';
+              e.currentTarget.style.color       = 'oklch(0.88 0.14 72)';
+              e.currentTarget.style.boxShadow   = '0 0 22px oklch(0.82 0.16 65 / 0.22)';
+              e.currentTarget.style.transform   = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'oklch(0.82 0.16 65 / 0.22)';
+              e.currentTarget.style.background  = 'oklch(0.82 0.16 65 / 0.05)';
+              e.currentTarget.style.color       = 'oklch(0.88 0.14 72 / 0.75)';
+              e.currentTarget.style.boxShadow   = '0 0 12px oklch(0.82 0.16 65 / 0.06)';
+              e.currentTarget.style.transform   = 'translateY(0)';
+            }}
+          >
+            <DpadIcon />
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase">
+              <span className="hidden sm:inline">Return</span>
+              <span className="sm:hidden">←</span>
+            </span>
+          </button>
+        )}
       </div>
     </header>
   );
