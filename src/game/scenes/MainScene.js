@@ -39,14 +39,33 @@ export default class MainScene extends Phaser.Scene {
     this.generatePixelArtTextures();
 
     // 3. Create Sky and Scenery
-    this.add.rectangle(512, 288, 1024, 576, 0x5c94fc); // Mario Blue Sky
+    this.add.image(512, 288, 'sky_bg');
+    this.add.image(512, 288, 'sky_glow');
+    this.add.image(512, 288, 'grid_bg');
+
+    // Add some pixel background stars
+    this.bgStars = this.add.group();
+    for (let i = 0; i < 12; i++) {
+      const x = Phaser.Math.Between(10, 1014);
+      const y = Phaser.Math.Between(10, 180);
+      const star = this.add.image(x, y, 'star')
+        .setScale(Phaser.Math.FloatBetween(0.4, 0.8))
+        .setAlpha(Phaser.Math.FloatBetween(0.2, 0.6));
+      // Twinkle properties
+      star.setData('twinkleSpeed', Phaser.Math.FloatBetween(0.008, 0.025));
+      star.setData('direction', Math.random() > 0.5 ? 1 : -1);
+      this.bgStars.add(star);
+    }
     
     // Add some pixel clouds
     this.clouds = this.add.group();
     for (let i = 0; i < 5; i++) {
       const x = Phaser.Math.Between(50, 950);
       const y = Phaser.Math.Between(40, 150);
-      const cloud = this.add.image(x, y, 'cloud').setScale(2).setAlpha(0.85);
+      const cloud = this.add.image(x, y, 'cloud')
+        .setScale(2)
+        .setAlpha(0.25) // moonlit faded clouds
+        .setTint(0x4a5d8a); // night slate-blue
       // Custom property for slow drift
       cloud.setData('speed', Phaser.Math.FloatBetween(0.1, 0.4));
       this.clouds.add(cloud);
@@ -55,7 +74,8 @@ export default class MainScene extends Phaser.Scene {
     // Add some pixel bushes/scenery at fixed coordinates on the ground
     const bushPositions = [80, 330, 512, 700, 850];
     bushPositions.forEach(x => {
-      this.add.image(x, 512, 'bush').setScale(2).setOrigin(0.5, 1);
+      const bush = this.add.image(x, 512, 'bush').setScale(2).setOrigin(0.5, 1);
+      bush.setTint(0x385850); // deep night-green
     });
 
     // 4. Create Physics Groups
@@ -96,6 +116,11 @@ export default class MainScene extends Phaser.Scene {
       this.platforms.create(p.x, p.y, 'brick');
     });
 
+    // Apply night tint to all platform bricks
+    this.platforms.getChildren().forEach(p => {
+      p.setTint(0x7788aa); // slate-blue night tint
+    });
+
     // 5. Setup Question Blocks (Intro, Projects, Experience, Resume, Contact) at scattered heights
     const blockData = [
       { x: 288, y: 230, type: 'intro', label: 'ABOUT ME' },
@@ -106,19 +131,34 @@ export default class MainScene extends Phaser.Scene {
     ];
 
     blockData.forEach((data) => {
+      // Add a soft glow behind the block
+      const glow = this.add.image(data.x, data.y, 'block_glow').setScale(1.8).setAlpha(0.75);
+      this.tweens.add({
+        targets: glow,
+        scaleX: 2.3,
+        scaleY: 2.3,
+        alpha: 0.35,
+        duration: 1500 + Math.random() * 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+
       const block = this.blocks.create(data.x, data.y, 'question_block');
       block.setData('type', data.type);
       block.setData('label', data.label);
       block.setData('isHit', false);
       block.setData('originalY', data.y);
+      block.setData('glow', glow); // store reference to glow
       block.setOrigin(0.5);
+      block.setTint(0xffddaa); // Warm amber tint
 
       // Label Text above block
       this.add.text(data.x, data.y - 32, data.label, {
         fontFamily: '"Press Start 2P"',
         fontSize: '8px',
-        color: '#ffffff',
-        stroke: '#000000',
+        color: '#ffe5b3', // Warm premium amber-white
+        stroke: '#050816', // Deep navy stroke
         strokeThickness: 3
       }).setOrigin(0.5);
     });
@@ -129,6 +169,10 @@ export default class MainScene extends Phaser.Scene {
     this.player.setGravityY(1000);
     this.player.setOrigin(0.5, 1);
     this.player.setSize(20, 32); // Align bounding box to new 32px height to fix floating
+    this.player.setDepth(101); // Ensure player renders above vignette for maximum readability
+
+    // 6.5. Create Cinematic Vignette Layer
+    this.add.image(512, 288, 'vignette').setDepth(100);
 
     // Create player animations
     this.anims.create({
@@ -258,6 +302,24 @@ export default class MainScene extends Phaser.Scene {
       }
     });
 
+    // Star twinkling
+    if (this.bgStars) {
+      this.bgStars.getChildren().forEach((star) => {
+        let alpha = star.alpha;
+        const speed = star.getData('twinkleSpeed');
+        const dir = star.getData('direction');
+        alpha += speed * dir;
+        if (alpha >= 0.85) {
+          star.setData('direction', -1);
+          alpha = 0.85;
+        } else if (alpha <= 0.15) {
+          star.setData('direction', 1);
+          alpha = 0.15;
+        }
+        star.setAlpha(alpha);
+      });
+    }
+
     if (this.isPaused) {
       // Freeze player input/physics
       this.player.setVelocityX(0);
@@ -356,7 +418,25 @@ export default class MainScene extends Phaser.Scene {
       if (!isAlreadyHit) {
         block.setData('isHit', true);
         block.setTexture('hit_block');
+        block.setTint(0x667788); // Dark deactivated slate tint
         this.playSynthSound('bump');
+
+        // Fade out and destroy the glow behind the block
+        const glow = block.getData('glow');
+        if (glow) {
+          this.tweens.killTweensOf(glow);
+          this.tweens.add({
+            targets: glow,
+            alpha: 0,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 300,
+            ease: 'Quad.easeOut',
+            onComplete: () => {
+              glow.destroy();
+            }
+          });
+        }
 
         // Spawn a floating retro star
         this.spawnStar(block.x, block.y - 16);
@@ -393,6 +473,7 @@ export default class MainScene extends Phaser.Scene {
 
   spawnStar(x, y) {
     const star = this.add.image(x, y, 'star').setScale(1.5);
+    star.setTint(0xffbb44); // Warm amber yellow star!
     
     // Float upward, spin, fade out, then destroy
     this.tweens.add({
@@ -642,6 +723,104 @@ export default class MainScene extends Phaser.Scene {
       frameWidth: pWidth,
       frameHeight: pHeight
     });
+
+    // 8. SKY BG GRADIENT (1024x576)
+    const skyBgCanvas = this.textures.createCanvas('sky_bg', 1024, 576);
+    const sCtx = skyBgCanvas.context;
+    const sGrad = sCtx.createLinearGradient(0, 0, 0, 576);
+    sGrad.addColorStop(0, '#050816');
+    sGrad.addColorStop(0.5, '#0a0e24');
+    sGrad.addColorStop(1, '#050816');
+    sCtx.fillStyle = sGrad;
+    sCtx.fillRect(0, 0, 1024, 576);
+    skyBgCanvas.refresh();
+
+    // 9. SKY GLOW (1024x576)
+    const skyGlowCanvas = this.textures.createCanvas('sky_glow', 1024, 576);
+    const sgCtx = skyGlowCanvas.context;
+    
+    // Top-center amber crown glow
+    const amberGrad = sgCtx.createRadialGradient(512, -80, 50, 512, -80, 500);
+    amberGrad.addColorStop(0, 'rgba(255, 184, 77, 0.18)');
+    amberGrad.addColorStop(1, 'rgba(255, 184, 77, 0)');
+    sgCtx.fillStyle = amberGrad;
+    sgCtx.beginPath();
+    sgCtx.arc(512, -80, 550, 0, Math.PI * 2);
+    sgCtx.fill();
+
+    // Bottom-left cyan bloom
+    const cyanGrad = sgCtx.createRadialGradient(0, 576, 30, 0, 576, 400);
+    cyanGrad.addColorStop(0, 'rgba(93, 169, 255, 0.14)');
+    cyanGrad.addColorStop(1, 'rgba(93, 169, 255, 0)');
+    sgCtx.fillStyle = cyanGrad;
+    sgCtx.beginPath();
+    sgCtx.arc(0, 576, 450, 0, Math.PI * 2);
+    sgCtx.fill();
+
+    // Top-right peach glow
+    const peachGrad = sgCtx.createRadialGradient(1024, 50, 20, 1024, 50, 350);
+    peachGrad.addColorStop(0, 'rgba(255, 154, 108, 0.1)');
+    peachGrad.addColorStop(1, 'rgba(255, 154, 108, 0)');
+    sgCtx.fillStyle = peachGrad;
+    sgCtx.beginPath();
+    sgCtx.arc(1024, 50, 400, 0, Math.PI * 2);
+    sgCtx.fill();
+    
+    skyGlowCanvas.refresh();
+
+    // 10. GRID SYSTEM WITH RADIAL MASK (1024x576)
+    const gridCanvas = this.textures.createCanvas('grid_bg', 1024, 576);
+    const gdCtx = gridCanvas.context;
+    gdCtx.strokeStyle = 'rgba(224, 231, 255, 0.07)';
+    gdCtx.lineWidth = 1;
+    const gridSize = 64;
+    for (let x = 0; x < 1024; x += gridSize) {
+      gdCtx.beginPath();
+      gdCtx.moveTo(x, 0);
+      gdCtx.lineTo(x, 576);
+      gdCtx.stroke();
+    }
+    for (let y = 0; y < 576; y += gridSize) {
+      gdCtx.beginPath();
+      gdCtx.moveTo(0, y);
+      gdCtx.lineTo(1024, y);
+      gdCtx.stroke();
+    }
+    // Radial mask
+    gdCtx.globalCompositeOperation = 'destination-in';
+    const maskGrad = gdCtx.createRadialGradient(512, 230, 80, 512, 230, 450);
+    maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+    maskGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.8)');
+    maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    gdCtx.fillStyle = maskGrad;
+    gdCtx.beginPath();
+    gdCtx.arc(512, 230, 500, 0, Math.PI * 2);
+    gdCtx.fill();
+    
+    gridCanvas.refresh();
+
+    // 11. BLOCK GLOW (64x64)
+    const blockGlowCanvas = this.textures.createCanvas('block_glow', 64, 64);
+    const bgCtx = blockGlowCanvas.context;
+    const bgGrad = bgCtx.createRadialGradient(32, 32, 2, 32, 32, 32);
+    bgGrad.addColorStop(0, 'rgba(255, 184, 77, 0.28)');
+    bgGrad.addColorStop(1, 'rgba(255, 184, 77, 0)');
+    bgCtx.fillStyle = bgGrad;
+    bgCtx.beginPath();
+    bgCtx.arc(32, 32, 32, 0, Math.PI * 2);
+    bgCtx.fill();
+    blockGlowCanvas.refresh();
+
+    // 12. VIGNETTE OVERLAY (1024x576)
+    const vignetteCanvas = this.textures.createCanvas('vignette', 1024, 576);
+    const vCtx = vignetteCanvas.context;
+    const vGrad = vCtx.createRadialGradient(512, 288, 260, 512, 288, 620);
+    vGrad.addColorStop(0, 'rgba(5, 8, 22, 0)');
+    vGrad.addColorStop(0.6, 'rgba(5, 8, 22, 0.25)');
+    vGrad.addColorStop(1, 'rgba(5, 8, 22, 0.82)');
+    vCtx.fillStyle = vGrad;
+    vCtx.fillRect(0, 0, 1024, 576);
+    vignetteCanvas.refresh();
   }
 
   drawScaledTexture(key, data, colors, scale = 2) {
