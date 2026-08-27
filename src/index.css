@@ -1,6 +1,23 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Pixel Operator 8 (Brackeys platformer pack, CC0) — used by the in-game
+   block labels drawn by Phaser. Loaded locally so the game can wait for it. */
+@font-face {
+  font-family: "Pixel Operator 8";
+  src: url("./assets/fonts/PixelOperator8.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "Pixel Operator 8";
+  src: url("./assets/fonts/PixelOperator8-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
 /* ============================================================
    UNIFIED DESIGN SYSTEM — Vansh Srivastava Portfolio
    Merges tokens from all 5 cinematic sub-repos + homepage
