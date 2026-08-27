@@ -1,5 +1,24 @@
 import Phaser from 'phaser';
 import { EventBus } from '../EventBus';
+import knightSheetUrl from '../../assets/sprites/knight.png';
+import cloudsSheetUrl from '../../assets/sprites/clouds.png';
+
+// knight.png (Brackeys platformer pack, CC0) — 8×8 grid of 32×32 cells.
+// Animation labels are baked into the sheet as pixels in their own cells,
+// so we only ever reference the idle and run frame ranges below.
+const KNIGHT_FRAME = { width: 32, height: 32 };
+const KNIGHT_IDLE  = { start: 0,  end: 3  }; // row 0
+const KNIGHT_RUN   = { start: 16, end: 31 }; // rows 2–3
+// Knight body occupies x 9–21, y 10–27 inside its cell (13×18, feet on row 27).
+const KNIGHT_BODY  = { width: 13, height: 18, offsetX: 9, offsetY: 10 };
+
+// clouds.png — four flat-bottomed clouds stacked in 16px rows (last row is 15px).
+const CLOUD_FRAMES = [
+  { name: 'cloud_0', x: 32, y: 0,  w: 48, h: 16 },
+  { name: 'cloud_1', x: 0,  y: 16, w: 48, h: 16 },
+  { name: 'cloud_2', x: 0,  y: 32, w: 80, h: 16 },
+  { name: 'cloud_3', x: 0,  y: 48, w: 48, h: 15 },
+];
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -22,7 +41,13 @@ export default class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    // We draw textures programmatically in create, so no external assets need to be preloaded.
+    // Player and clouds come from PNG assets; everything else is still drawn
+    // programmatically in generatePixelArtTextures().
+    this.load.spritesheet('player', knightSheetUrl, {
+      frameWidth: KNIGHT_FRAME.width,
+      frameHeight: KNIGHT_FRAME.height,
+    });
+    this.load.image('clouds', cloudsSheetUrl);
   }
 
   create() {
@@ -57,12 +82,18 @@ export default class MainScene extends Phaser.Scene {
       this.bgStars.add(star);
     }
     
-    // Add some pixel clouds
+    // Add some pixel clouds — register the four cloud shapes as named frames
+    // on the tileset, then pick one at random per cloud.
+    const cloudTexture = this.textures.get('clouds');
+    CLOUD_FRAMES.forEach((f) => {
+      if (!cloudTexture.has(f.name)) cloudTexture.add(f.name, 0, f.x, f.y, f.w, f.h);
+    });
     this.clouds = this.add.group();
     for (let i = 0; i < 5; i++) {
       const x = Phaser.Math.Between(50, 950);
       const y = Phaser.Math.Between(40, 150);
-      const cloud = this.add.image(x, y, 'cloud')
+      const frame = Phaser.Utils.Array.GetRandom(CLOUD_FRAMES).name;
+      const cloud = this.add.image(x, y, 'clouds', frame)
         .setScale(2)
         .setAlpha(0.25) // moonlit faded clouds
         .setTint(0x4a5d8a); // night slate-blue
@@ -164,32 +195,42 @@ export default class MainScene extends Phaser.Scene {
     });
 
     // 6. Create Player
-    this.player = this.physics.add.sprite(100, 400, 'player', 0);
+    this.player = this.physics.add.sprite(100, 400, 'player', KNIGHT_IDLE.start);
     this.player.setCollideWorldBounds(true);
     this.player.setGravityY(1000);
     this.player.setOrigin(0.5, 1);
-    this.player.setSize(20, 32); // Align bounding box to new 32px height to fix floating
+    // Knight is ~13×18px inside a 32×32 cell; 2× scale ≈ 26×36 on screen,
+    // matching the size of the previous 32px sprite.
+    this.player.setScale(2);
+    // Hug the hitbox to the knight (values are in unscaled texture pixels).
+    // Body bottom lands on cell row 28 so the feet sit flush on the floor;
+    // the 4 transparent rows below hang harmlessly under the ground.
+    this.player.setSize(KNIGHT_BODY.width, KNIGHT_BODY.height);
+    this.player.setOffset(KNIGHT_BODY.offsetX, KNIGHT_BODY.offsetY);
     this.player.setDepth(101); // Ensure player renders above vignette for maximum readability
 
     // 6.5. Create Cinematic Vignette Layer
     this.add.image(512, 288, 'vignette').setDepth(100);
 
-    // Create player animations
+    // Create player animations (idle + run only; the sheet has no jump pose,
+    // so airborne holds the first idle frame)
     this.anims.create({
       key: 'idle',
-      frames: [{ key: 'player', frame: 0 }]
-    });
-
-    this.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player', { start: 1, end: 2 }),
-      frameRate: 10,
+      frames: this.anims.generateFrameNumbers('player', KNIGHT_IDLE),
+      frameRate: 6,
       repeat: -1
     });
 
     this.anims.create({
-      key: 'jump',
-      frames: [{ key: 'player', frame: 3 }]
+      key: 'run',
+      frames: this.anims.generateFrameNumbers('player', KNIGHT_RUN),
+      frameRate: 16,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: 'airborne',
+      frames: [{ key: 'player', frame: KNIGHT_IDLE.start }]
     });
 
     // 7. Add Collisions
@@ -333,18 +374,18 @@ export default class MainScene extends Phaser.Scene {
       this.player.setVelocityX(-speed);
       this.player.setFlipX(true);
       if (this.player.body.touching.down) {
-        this.player.anims.play('walk', true);
+        this.player.anims.play('run', true);
       }
     } else if (this.keysPressed.right) {
       this.player.setVelocityX(speed);
       this.player.setFlipX(false);
       if (this.player.body.touching.down) {
-        this.player.anims.play('walk', true);
+        this.player.anims.play('run', true);
       }
     } else {
       this.player.setVelocityX(0);
       if (this.player.body.touching.down) {
-        this.player.anims.play('idle');
+        this.player.anims.play('idle', true);
       }
     }
 
@@ -355,9 +396,9 @@ export default class MainScene extends Phaser.Scene {
       this.keysPressed.up = false; // Reset to prevent consecutive automatic jumps
     }
 
-    // Jump Animation
+    // Airborne — hold the first idle frame (no jump pose in the sheet)
     if (!this.player.body.touching.down) {
-      this.player.anims.play('jump');
+      this.player.anims.play('airborne', true);
     }
   }
 
@@ -496,9 +537,6 @@ export default class MainScene extends Phaser.Scene {
   generatePixelArtTextures() {
     const colors = {
       '.': null,
-      'R': '#D82800', // Red cap/shirt
-      'B': '#002288', // Blue overalls
-      'S': '#FCD8A8', // Peach skin
       'D': '#8C5200', // Dark hair/brown shadow
       'W': '#FFFFFF', // White
       'Y': '#FFE018', // Yellow
@@ -590,19 +628,6 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('star', starArt, colors, 2);
 
-    // 5. CLOUD TEXTURE (128x64)
-    const cloudCanvas = this.textures.createCanvas('cloud', 64, 32);
-    const ctx = cloudCanvas.context;
-    ctx.fillStyle = '#ffffff';
-    // Draw simple rounded retro cloud shape
-    ctx.beginPath();
-    ctx.arc(16, 20, 10, 0, Math.PI * 2);
-    ctx.arc(32, 14, 13, 0, Math.PI * 2);
-    ctx.arc(48, 20, 10, 0, Math.PI * 2);
-    ctx.rect(16, 12, 32, 14);
-    ctx.fill();
-    cloudCanvas.refresh();
-
     // 6. BUSH SCENERY TEXTURE (64x48)
     const bushArt = [
       "......EEEE......",
@@ -615,114 +640,6 @@ export default class MainScene extends Phaser.Scene {
       "EEL L EE L LE EE"
     ];
     this.drawScaledTexture('bush', bushArt, colors, 3);
-
-    // 7. PLAYER SPRITESHEET (128x32)
-    // 4 frames: [0: Idle, 1: Walk1, 2: Walk2, 3: Jump]
-    const pWidth = 16 * 2; // 32
-    const pHeight = 16 * 2; // 32
-    const playerCanvas = this.textures.createCanvas('player_canvas', pWidth * 4, pHeight);
-    const pCtx = playerCanvas.context;
-
-    const frames = [
-      // Frame 0: Idle
-      [
-        ".....RRRRRR.....",
-        "....RRRRRRRRR...",
-        "....DDDSSDS.....",
-        "...DSDSSSDSS....",
-        "...DSDSSDDSSSD..",
-        "...DDSSSDDDSS...",
-        ".....SSSSSSS....",
-        "....RRBBRRBR....",
-        "...RRRBBBRRBR...",
-        "..RRRRBBBBBRRR..",
-        "..SSSRBBYBBRSS..",
-        "..WWWRBBBBBRWW..",
-        "....BBBB.BBBB...",
-        "....BBBB.BBBB...",
-        "....DDDD.DDDD...",
-        "....DDDD.DDDD..."
-      ],
-      // Frame 1: Walk 1
-      [
-        ".....RRRRRR.....",
-        "....RRRRRRRRR...",
-        "....DDDSSDS.....",
-        "...DSDSSSDSS....",
-        "...DSDSSDDSSSD..",
-        "...DDSSSDDDSS...",
-        ".....SSSSSSS....",
-        "....RRBBRRBR....",
-        "...RRRBBBRRBR...",
-        "..RRRRBBBBBRRR..",
-        "..SSSRBBYBBRSS..",
-        "..WWWRBBBBBRWW..",
-        "....BBBB.BBBB...",
-        "....BBBBBBBBB...",
-        "....DDDD..DDD...",
-        "....DD......D..."
-      ],
-      // Frame 2: Walk 2
-      [
-        ".....RRRRRR.....",
-        "....RRRRRRRRR...",
-        "....DDDSSDS.....",
-        "...DSDSSSDSS....",
-        "...DSDSSDDSSSD..",
-        "...DDSSSDDDSS...",
-        ".....SSSSSSS....",
-        "....RRBBRRBR....",
-        "...RRRBBBRRBR...",
-        "..RRRRBBBBBRRR..",
-        "..SSSRBBYBBRSS..",
-        "..WWWRBBBBBRWW..",
-        "....BBBB.BBBB...",
-        "....BBBBBBBBB...",
-        ".....DDD.DDDD...",
-        ".....D....DDD..."
-      ],
-      // Frame 3: Jump
-      [
-        ".....RRRRRR.....",
-        "....RRRRRRRRR...",
-        "....DDDSSDS.....",
-        "...DSDSSSDSS....",
-        "...DSDSSDDSSSD..",
-        "...DDSSSDDDSS...",
-        ".....SSSSSSS....",
-        "....RRBBRRBR....",
-        "...RRRBBBRRBR...",
-        "..RRRRBBBBBRRR..",
-        "..SSSRBBYBBRSS..",
-        "..WWWRBBBBBRWW..",
-        "....BBBBBBBBB...",
-        "....BBBB.BBBB...",
-        "....DDD...DDD...",
-        "....DD.....DD..."
-      ]
-    ];
-
-    frames.forEach((frame, fIndex) => {
-      const startX = fIndex * pWidth;
-      for (let y = 0; y < 16; y++) {
-        for (let x = 0; x < 16; x++) {
-          const char = frame[y][x];
-          const color = colors[char];
-          if (color) {
-            pCtx.fillStyle = color;
-            pCtx.fillRect(startX + x * 2, y * 2, 2, 2);
-          }
-        }
-      }
-    });
-
-    playerCanvas.refresh();
-
-    // Register canvas as Spritesheet
-    this.textures.addSpriteSheet('player', this.textures.get('player_canvas').getSourceImage(), {
-      frameWidth: pWidth,
-      frameHeight: pHeight
-    });
 
     // 8. SKY BG GRADIENT (1024x576)
     const skyBgCanvas = this.textures.createCanvas('sky_bg', 1024, 576);
