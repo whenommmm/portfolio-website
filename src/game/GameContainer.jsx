@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { startPhaserGame } from './PhaserGame';
 import { EventBus } from './EventBus';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -47,11 +47,14 @@ export default function GameContainer({ isMuted, toggleMute }) {
     };
   }, []);
 
+  // Full-viewport host: the game's aspect is matched to this box (see
+  // PhaserGame.js), so the canvas fills it edge to edge. The navy matches the
+  // sky's edge color in case FIT ever has to letterbox.
   return (
-    <div className="w-full h-full flex items-center justify-center bg-[#111] p-2 sm:p-4">
+    <div className="w-full h-full bg-[#050816]">
       <div
         id="phaser-game"
-        className="w-full max-h-full aspect-[16/9] relative flex items-center justify-center"
+        className="relative w-full h-full overflow-hidden"
       >
         {/* Mute Controls Overlay */}
         <div className="absolute top-4 right-4 z-10">

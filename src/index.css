@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Jersey 10 (SIL Open Font License) — used by the in-game question-block
+   labels drawn by Phaser. Loaded locally so the game can wait for it. */
+@font-face {
+  font-family: "Jersey 10";
+  src: url("./assets/fonts/Jersey10-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
 /* ============================================================
    UNIFIED DESIGN SYSTEM — Vansh Srivastava Portfolio
    Merges tokens from all 5 cinematic sub-repos + homepage

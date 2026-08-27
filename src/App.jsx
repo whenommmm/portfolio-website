@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import GameContainer from './game/GameContainer';
 import { EventBus } from './game/EventBus';
@@ -44,7 +44,8 @@ function PersistentGame({ isVisible }) {
         zIndex: isVisible ? 1 : -1,
         visibility: isVisible ? 'visible' : 'hidden',
         pointerEvents: isVisible ? 'auto' : 'none',
-        background: '#111',
+        background: '#050816', // matches the game sky's edge color
+
       }}
     >
       <GameContainer isMuted={isMuted} toggleMute={toggleMute} />
@@ -58,6 +59,16 @@ function PersistentGame({ isVisible }) {
 // Pressing Enter (or clicking anywhere) dismisses it with a fade,
 // then the tutorial WelcomeModal appears.
 //
+// Scanline star particles — deterministic, so computed once at module load
+// (reading a ref during render trips react-hooks/refs and buys nothing here).
+const TITLE_PARTICLES = Array.from({ length: 40 }, (_, i) => ({
+  x: ((i * 9301 + 49297) % 233280) / 233280 * 100,
+  y: ((i * 4096 + 12345) % 233280) / 233280 * 100,
+  size: 1 + (i % 3) * 0.5,
+  dur:  4 + (i % 6),
+  del:  (i % 8) * 0.5,
+}));
+
 function TitleScreen({ onDismiss }) {
   const [fading, setFading] = useState(false);
 
@@ -76,16 +87,7 @@ function TitleScreen({ onDismiss }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [dismiss]);
 
-  // Scanline star particles (static for perf, no deps)
-  const particles = useRef(
-    Array.from({ length: 40 }, (_, i) => ({
-      x: ((i * 9301 + 49297) % 233280) / 233280 * 100,
-      y: ((i * 4096 + 12345) % 233280) / 233280 * 100,
-      size: 1 + (i % 3) * 0.5,
-      dur:  4 + (i % 6),
-      del:  (i % 8) * 0.5,
-    }))
-  ).current;
+  const particles = TITLE_PARTICLES;
 
   return (
     <div

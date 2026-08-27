@@ -2,6 +2,43 @@ import Phaser from 'phaser';
 import { EventBus } from '../EventBus';
 import knightSheetUrl from '../../assets/sprites/knight.png';
 import cloudsSheetUrl from '../../assets/sprites/clouds.png';
+import starSheetUrl   from '../../assets/sprites/star.png';
+
+// The level (platforms, blocks, player spawn) is authored in a fixed
+// 1024×576 coordinate space. The actual game size follows the window's aspect
+// ratio (see PhaserGame.js); layoutViewport() centers the level inside it and
+// extends the sky and ground into whatever extra space there is.
+export const LEVEL = { width: 1024, height: 576 };
+
+// star.png — 13-frame 32×32 twinkle animation in a single row.
+const STAR_FRAME   = { width: 32, height: 32 };
+const STAR_TWINKLE = { start: 0, end: 12 };
+
+// Font for the labels above the question blocks. Declared via @font-face in
+// index.css (Jersey 10, OFL). It is drawn on a 10px pixel grid, so we render
+// at an exact 2× for crisp pixels.
+const LABEL_FONT = { family: 'Jersey 10', size: '20px' };
+
+/**
+ * Loader file that resolves once a CSS-declared web font is usable, so Phaser
+ * Text created in create() can't fall back to a system font. Times out
+ * gracefully — a missing font should never block the game from booting.
+ */
+class WebFontFile extends Phaser.Loader.File {
+  constructor(loader, family, timeoutMs = 3000) {
+    super(loader, { type: 'webfont', key: `webfont-${family}`, url: family });
+    this.family = family;
+    this.timeoutMs = timeoutMs;
+  }
+
+  load() {
+    const done = (ok) => this.loader.nextFile(this, ok);
+    if (!document.fonts?.load) { done(true); return; }
+    const timeout = new Promise((resolve) => setTimeout(resolve, this.timeoutMs));
+    Promise.race([document.fonts.load(`16px "${this.family}"`), timeout])
+      .then(() => done(true), () => done(true));
+  }
+}
 
 // knight.png (Brackeys platformer pack, CC0) — 8×8 grid of 32×32 cells.
 // Animation labels are baked into the sheet as pixels in their own cells,
@@ -33,21 +70,23 @@ export default class MainScene extends Phaser.Scene {
       contact:    '/contact',
     };
     this.audioCtx = null;
-  }
-
-  init() {
-    // Set up standard responsive scaling
-    this.scale.setGameSize(1024, 576);
+    this.viewportTextureVersion = 0;
+    this.groundBricks = [];
   }
 
   preload() {
-    // Player and clouds come from PNG assets; everything else is still drawn
-    // programmatically in generatePixelArtTextures().
+    // Player, clouds and stars come from PNG assets; everything else is still
+    // drawn programmatically in generatePixelArtTextures().
     this.load.spritesheet('player', knightSheetUrl, {
       frameWidth: KNIGHT_FRAME.width,
       frameHeight: KNIGHT_FRAME.height,
     });
     this.load.image('clouds', cloudsSheetUrl);
+    this.load.spritesheet('star', starSheetUrl, {
+      frameWidth: STAR_FRAME.width,
+      frameHeight: STAR_FRAME.height,
+    });
+    this.load.addFile(new WebFontFile(this.load, LABEL_FONT.family));
   }
 
   create() {
@@ -63,25 +102,35 @@ export default class MainScene extends Phaser.Scene {
     // 2. Generate Textures Programmatically
     this.generatePixelArtTextures();
 
-    // 3. Create Sky and Scenery
-    this.add.image(512, 288, 'sky_bg');
-    this.add.image(512, 288, 'sky_glow');
-    this.add.image(512, 288, 'grid_bg');
+    // 3. Create Sky and Scenery — sized to the viewport, level kept centered.
+    // Re-runs automatically when the game is resized to follow the window.
+    this.layoutViewport();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutViewport, this);
 
-    // Add some pixel background stars
+    // Twinkle animation shared by the background stars and the block-hit star
+    this.anims.create({
+      key: 'star-twinkle',
+      frames: this.anims.generateFrameNumbers('star', STAR_TWINKLE),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    // Add some pixel background stars across the visible sky
     this.bgStars = this.add.group();
     for (let i = 0; i < 12; i++) {
-      const x = Phaser.Math.Between(10, 1014);
-      const y = Phaser.Math.Between(10, 180);
-      const star = this.add.image(x, y, 'star')
-        .setScale(Phaser.Math.FloatBetween(0.4, 0.8))
+      const x = Phaser.Math.Between(this.view.left + 10, this.view.right - 10);
+      const y = Phaser.Math.Between(this.view.top + 10, 180);
+      const star = this.add.sprite(x, y, 'star', 0)
+        .setScale(Phaser.Math.FloatBetween(0.5, 1.0))
         .setAlpha(Phaser.Math.FloatBetween(0.2, 0.6));
-      // Twinkle properties
+      // Random start frame so the stars don't twinkle in lockstep
+      star.anims.play({ key: 'star-twinkle', startFrame: Phaser.Math.Between(STAR_TWINKLE.start, STAR_TWINKLE.end) });
+      // Alpha-pulse properties (layered on top of the frame animation)
       star.setData('twinkleSpeed', Phaser.Math.FloatBetween(0.008, 0.025));
       star.setData('direction', Math.random() > 0.5 ? 1 : -1);
       this.bgStars.add(star);
     }
-    
+
     // Add some pixel clouds — register the four cloud shapes as named frames
     // on the tileset, then pick one at random per cloud.
     const cloudTexture = this.textures.get('clouds');
@@ -90,8 +139,8 @@ export default class MainScene extends Phaser.Scene {
     });
     this.clouds = this.add.group();
     for (let i = 0; i < 5; i++) {
-      const x = Phaser.Math.Between(50, 950);
-      const y = Phaser.Math.Between(40, 150);
+      const x = Phaser.Math.Between(this.view.left + 50, this.view.right - 50);
+      const y = Phaser.Math.Between(this.view.top + 40, 150);
       const frame = Phaser.Utils.Array.GetRandom(CLOUD_FRAMES).name;
       const cloud = this.add.image(x, y, 'clouds', frame)
         .setScale(2)
@@ -113,14 +162,9 @@ export default class MainScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     this.blocks = this.physics.add.staticGroup();
 
-    // Create Ground Floor (Bricks)
-    // Screen width 1024: 32 columns of 32x32 tiles
-    for (let x = 16; x < 1024; x += 32) {
-      this.platforms.create(x, 528, 'brick'); // Ground Level 1 (Top Layer)
-      this.platforms.create(x, 560, 'brick'); // Ground Level 2
-      this.platforms.create(x, 592, 'brick'); // Ground Level 3
-      this.platforms.create(x, 624, 'brick'); // Ground Level 4
-    }
+    // Create Ground Floor (Bricks) — spans the visible width and depth,
+    // rebuilt by layoutViewport() whenever the game is resized.
+    this.buildGround();
 
     // Create Separate Floating Platforms (using 32x32 brick tiles)
     const platformData = [
@@ -186,8 +230,8 @@ export default class MainScene extends Phaser.Scene {
 
       // Label Text above block
       this.add.text(data.x, data.y - 32, data.label, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: `"${LABEL_FONT.family}"`,
+        fontSize: LABEL_FONT.size,
         color: '#ffe5b3', // Warm premium amber-white
         stroke: '#050816', // Deep navy stroke
         strokeThickness: 3
@@ -207,10 +251,7 @@ export default class MainScene extends Phaser.Scene {
     // the 4 transparent rows below hang harmlessly under the ground.
     this.player.setSize(KNIGHT_BODY.width, KNIGHT_BODY.height);
     this.player.setOffset(KNIGHT_BODY.offsetX, KNIGHT_BODY.offsetY);
-    this.player.setDepth(101); // Ensure player renders above vignette for maximum readability
-
-    // 6.5. Create Cinematic Vignette Layer
-    this.add.image(512, 288, 'vignette').setDepth(100);
+    this.player.setDepth(101); // Ensure player renders above vignette (depth 100, see layoutViewport)
 
     // Create player animations (idle + run only; the sheet has no jump pose,
     // so airborne holds the first idle frame)
@@ -320,6 +361,7 @@ export default class MainScene extends Phaser.Scene {
     EventBus.on('toggle-mute', muteListener);
 
     const cleanup = () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutViewport, this);
       window.removeEventListener('keydown', this.handleKeyDown);
       window.removeEventListener('keyup', this.handleKeyUp);
       window.removeEventListener('keydown', audioInitHandler);
@@ -335,11 +377,11 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update() {
-    // Cloud drift
+    // Cloud drift — wrap around the visible viewport edges
     this.clouds.getChildren().forEach((cloud) => {
       cloud.x += cloud.getData('speed');
-      if (cloud.x > 1050) {
-        cloud.x = -50;
+      if (cloud.x > this.view.right + 90) {
+        cloud.x = this.view.left - 90;
       }
     });
 
@@ -513,15 +555,16 @@ export default class MainScene extends Phaser.Scene {
   }
 
   spawnStar(x, y) {
-    const star = this.add.image(x, y, 'star').setScale(1.5);
+    const star = this.add.sprite(x, y, 'star', 0).setScale(2);
     star.setTint(0xffbb44); // Warm amber yellow star!
-    
+    star.anims.play({ key: 'star-twinkle', frameRate: 24 });
+
     // Float upward, spin, fade out, then destroy
     this.tweens.add({
       targets: star,
       y: y - 70,
-      scaleX: 2.2,
-      scaleY: 2.2,
+      scaleX: 2.8,
+      scaleY: 2.8,
       angle: 180,
       alpha: 0,
       duration: 450,
@@ -611,23 +654,6 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('hit_block', hitArt, colors, 2);
 
-    // 4. STAR TEXTURE (32x32)
-    const starArt = [
-      "......GG......",
-      ".....GYYG.....",
-      ".....GYYG.....",
-      "GGGGGGYYGGGGGG",
-      "GYYYYYYYYYYYYG",
-      ".GYYYYYYYYYYG.",
-      "..GYYYYYYYYG..",
-      "...GYYYYYYG...",
-      "...GYYYYYYG...",
-      "..GYYGGYYYG..",
-      ".GYYG..GYYYG.",
-      "GGGG....GGGG.."
-    ];
-    this.drawScaledTexture('star', starArt, colors, 2);
-
     // 6. BUSH SCENERY TEXTURE (64x48)
     const bushArt = [
       "......EEEE......",
@@ -641,80 +667,8 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('bush', bushArt, colors, 3);
 
-    // 8. SKY BG GRADIENT (1024x576)
-    const skyBgCanvas = this.textures.createCanvas('sky_bg', 1024, 576);
-    const sCtx = skyBgCanvas.context;
-    const sGrad = sCtx.createLinearGradient(0, 0, 0, 576);
-    sGrad.addColorStop(0, '#050816');
-    sGrad.addColorStop(0.5, '#0a0e24');
-    sGrad.addColorStop(1, '#050816');
-    sCtx.fillStyle = sGrad;
-    sCtx.fillRect(0, 0, 1024, 576);
-    skyBgCanvas.refresh();
-
-    // 9. SKY GLOW (1024x576)
-    const skyGlowCanvas = this.textures.createCanvas('sky_glow', 1024, 576);
-    const sgCtx = skyGlowCanvas.context;
-    
-    // Top-center amber crown glow
-    const amberGrad = sgCtx.createRadialGradient(512, -80, 50, 512, -80, 500);
-    amberGrad.addColorStop(0, 'rgba(255, 184, 77, 0.18)');
-    amberGrad.addColorStop(1, 'rgba(255, 184, 77, 0)');
-    sgCtx.fillStyle = amberGrad;
-    sgCtx.beginPath();
-    sgCtx.arc(512, -80, 550, 0, Math.PI * 2);
-    sgCtx.fill();
-
-    // Bottom-left cyan bloom
-    const cyanGrad = sgCtx.createRadialGradient(0, 576, 30, 0, 576, 400);
-    cyanGrad.addColorStop(0, 'rgba(93, 169, 255, 0.14)');
-    cyanGrad.addColorStop(1, 'rgba(93, 169, 255, 0)');
-    sgCtx.fillStyle = cyanGrad;
-    sgCtx.beginPath();
-    sgCtx.arc(0, 576, 450, 0, Math.PI * 2);
-    sgCtx.fill();
-
-    // Top-right peach glow
-    const peachGrad = sgCtx.createRadialGradient(1024, 50, 20, 1024, 50, 350);
-    peachGrad.addColorStop(0, 'rgba(255, 154, 108, 0.1)');
-    peachGrad.addColorStop(1, 'rgba(255, 154, 108, 0)');
-    sgCtx.fillStyle = peachGrad;
-    sgCtx.beginPath();
-    sgCtx.arc(1024, 50, 400, 0, Math.PI * 2);
-    sgCtx.fill();
-    
-    skyGlowCanvas.refresh();
-
-    // 10. GRID SYSTEM WITH RADIAL MASK (1024x576)
-    const gridCanvas = this.textures.createCanvas('grid_bg', 1024, 576);
-    const gdCtx = gridCanvas.context;
-    gdCtx.strokeStyle = 'rgba(224, 231, 255, 0.07)';
-    gdCtx.lineWidth = 1;
-    const gridSize = 64;
-    for (let x = 0; x < 1024; x += gridSize) {
-      gdCtx.beginPath();
-      gdCtx.moveTo(x, 0);
-      gdCtx.lineTo(x, 576);
-      gdCtx.stroke();
-    }
-    for (let y = 0; y < 576; y += gridSize) {
-      gdCtx.beginPath();
-      gdCtx.moveTo(0, y);
-      gdCtx.lineTo(1024, y);
-      gdCtx.stroke();
-    }
-    // Radial mask
-    gdCtx.globalCompositeOperation = 'destination-in';
-    const maskGrad = gdCtx.createRadialGradient(512, 230, 80, 512, 230, 450);
-    maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-    maskGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.8)');
-    maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    gdCtx.fillStyle = maskGrad;
-    gdCtx.beginPath();
-    gdCtx.arc(512, 230, 500, 0, Math.PI * 2);
-    gdCtx.fill();
-    
-    gridCanvas.refresh();
+    // (Sky gradient, sky glow, grid and vignette are viewport-sized and live in
+    //  generateViewportTextures(), since they depend on the current game size.)
 
     // 11. BLOCK GLOW (64x64)
     const blockGlowCanvas = this.textures.createCanvas('block_glow', 64, 64);
@@ -727,17 +681,162 @@ export default class MainScene extends Phaser.Scene {
     bgCtx.arc(32, 32, 32, 0, Math.PI * 2);
     bgCtx.fill();
     blockGlowCanvas.refresh();
+  }
 
-    // 12. VIGNETTE OVERLAY (1024x576)
-    const vignetteCanvas = this.textures.createCanvas('vignette', 1024, 576);
+  // ── Viewport-dependent layout ───────────────────────────────────────────────
+
+  /**
+   * Fit the scene to the current game size: center the 1024×576 level with the
+   * camera, widen the physics bounds, regenerate the sky/grid/vignette at full
+   * size and extend the ground bricks. Runs once from create() and again on
+   * every Scale RESIZE (PhaserGame.js keeps the game's aspect equal to the
+   * window's, so this is what removes the letterbox bars).
+   */
+  layoutViewport() {
+    const W = this.scale.gameSize.width;
+    const H = this.scale.gameSize.height;
+    const cx = LEVEL.width / 2;
+    const cy = LEVEL.height / 2;
+
+    // Visible world rect, in level coordinates (may extend into negatives)
+    this.view = {
+      width: W,
+      height: H,
+      left:   cx - W / 2,
+      right:  cx + W / 2,
+      top:    cy - H / 2,
+      bottom: cy + H / 2,
+    };
+
+    this.cameras.main.setScroll(this.view.left, this.view.top);
+    this.physics.world.setBounds(this.view.left, this.view.top, W, H);
+
+    // Fresh textures under versioned keys so we can swap safely, then drop the old ones
+    const prev = this.viewportTextureVersion;
+    const next = ++this.viewportTextureVersion;
+    const keys = this.generateViewportTextures(W, H, next);
+
+    if (!this.skyBg) {
+      this.skyBg    = this.add.image(cx, cy, keys.sky).setDepth(-3);
+      this.skyGlow  = this.add.image(cx, cy, keys.glow).setDepth(-2);
+      this.gridBg   = this.add.image(cx, cy, keys.grid).setDepth(-1);
+      this.vignette = this.add.image(cx, cy, keys.vignette).setDepth(100);
+    } else {
+      this.skyBg.setTexture(keys.sky);
+      this.skyGlow.setTexture(keys.glow);
+      this.gridBg.setTexture(keys.grid);
+      this.vignette.setTexture(keys.vignette);
+      ['sky_bg', 'sky_glow', 'grid_bg', 'vignette'].forEach((k) => {
+        const old = `${k}_${prev}`;
+        if (this.textures.exists(old)) this.textures.remove(old);
+      });
+    }
+
+    if (this.platforms) this.buildGround();
+  }
+
+  /** Brick floor covering the visible width and everything below the level's ground line. */
+  buildGround() {
+    this.groundBricks.forEach((b) => b.destroy());
+    this.groundBricks = [];
+
+    const tile = 32;
+    const groundTop = 528;                        // level's top ground row (center y)
+    const firstCol = Math.floor((this.view.left - 16) / tile) * tile + 16;
+    for (let x = firstCol; x - 16 < this.view.right; x += tile) {
+      for (let y = groundTop; y - 16 < this.view.bottom; y += tile) {
+        const brick = this.platforms.create(x, y, 'brick');
+        brick.setTint(0x7788aa); // slate-blue night tint
+        this.groundBricks.push(brick);
+      }
+    }
+  }
+
+  /**
+   * Draw the sky gradient, ambient glows, masked grid and vignette on canvases
+   * of the given size. All positions are expressed in level coordinates and
+   * offset so the artwork stays anchored to the level, not the viewport.
+   */
+  generateViewportTextures(W, H, version) {
+    const ox = (W - LEVEL.width) / 2;   // level origin inside the canvas
+    const oy = (H - LEVEL.height) / 2;
+    const keys = {
+      sky:      `sky_bg_${version}`,
+      glow:     `sky_glow_${version}`,
+      grid:     `grid_bg_${version}`,
+      vignette: `vignette_${version}`,
+    };
+
+    // SKY BG GRADIENT
+    const skyBgCanvas = this.textures.createCanvas(keys.sky, W, H);
+    const sCtx = skyBgCanvas.context;
+    const sGrad = sCtx.createLinearGradient(0, 0, 0, H);
+    sGrad.addColorStop(0, '#050816');
+    sGrad.addColorStop(0.5, '#0a0e24');
+    sGrad.addColorStop(1, '#050816');
+    sCtx.fillStyle = sGrad;
+    sCtx.fillRect(0, 0, W, H);
+    skyBgCanvas.refresh();
+
+    // SKY GLOW
+    const skyGlowCanvas = this.textures.createCanvas(keys.glow, W, H);
+    const sgCtx = skyGlowCanvas.context;
+    const glow = (x, y, r0, r1, rgb, a) => {
+      const g = sgCtx.createRadialGradient(x + ox, y + oy, r0, x + ox, y + oy, r1);
+      g.addColorStop(0, `rgba(${rgb}, ${a})`);
+      g.addColorStop(1, `rgba(${rgb}, 0)`);
+      sgCtx.fillStyle = g;
+      sgCtx.beginPath();
+      sgCtx.arc(x + ox, y + oy, r1 + 50, 0, Math.PI * 2);
+      sgCtx.fill();
+    };
+    glow(512,  -80, 50, 500, '255, 184, 77',  0.18); // top-center amber crown
+    glow(0,    576, 30, 400, '93, 169, 255',  0.14); // bottom-left cyan bloom
+    glow(1024,  50, 20, 350, '255, 154, 108', 0.10); // top-right peach glow
+    skyGlowCanvas.refresh();
+
+    // GRID WITH RADIAL MASK — lines aligned to the level's 64px grid
+    const gridCanvas = this.textures.createCanvas(keys.grid, W, H);
+    const gdCtx = gridCanvas.context;
+    gdCtx.strokeStyle = 'rgba(224, 231, 255, 0.07)';
+    gdCtx.lineWidth = 1;
+    const gridSize = 64;
+    for (let x = ox % gridSize; x < W; x += gridSize) {
+      gdCtx.beginPath();
+      gdCtx.moveTo(x, 0);
+      gdCtx.lineTo(x, H);
+      gdCtx.stroke();
+    }
+    for (let y = oy % gridSize; y < H; y += gridSize) {
+      gdCtx.beginPath();
+      gdCtx.moveTo(0, y);
+      gdCtx.lineTo(W, y);
+      gdCtx.stroke();
+    }
+    gdCtx.globalCompositeOperation = 'destination-in';
+    const maskGrad = gdCtx.createRadialGradient(512 + ox, 230 + oy, 80, 512 + ox, 230 + oy, 450);
+    maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+    maskGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.8)');
+    maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    gdCtx.fillStyle = maskGrad;
+    gdCtx.beginPath();
+    gdCtx.arc(512 + ox, 230 + oy, 500, 0, Math.PI * 2);
+    gdCtx.fill();
+    gridCanvas.refresh();
+
+    // VIGNETTE OVERLAY — beyond the outer radius the last stop continues, so
+    // the extended area is uniformly dark
+    const vignetteCanvas = this.textures.createCanvas(keys.vignette, W, H);
     const vCtx = vignetteCanvas.context;
-    const vGrad = vCtx.createRadialGradient(512, 288, 260, 512, 288, 620);
+    const vGrad = vCtx.createRadialGradient(512 + ox, 288 + oy, 260, 512 + ox, 288 + oy, 620);
     vGrad.addColorStop(0, 'rgba(5, 8, 22, 0)');
     vGrad.addColorStop(0.6, 'rgba(5, 8, 22, 0.25)');
     vGrad.addColorStop(1, 'rgba(5, 8, 22, 0.82)');
     vCtx.fillStyle = vGrad;
-    vCtx.fillRect(0, 0, 1024, 576);
+    vCtx.fillRect(0, 0, W, H);
     vignetteCanvas.refresh();
+
+    return keys;
   }
 
   drawScaledTexture(key, data, colors, scale = 2) {
