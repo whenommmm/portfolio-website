@@ -15,9 +15,9 @@ const STAR_FRAME   = { width: 32, height: 32 };
 const STAR_TWINKLE = { start: 0, end: 12 };
 
 // Font for the labels above the question blocks. Declared via @font-face in
-// index.css (Pixel Operator 8, Brackeys pack). Its native size is 8px; we draw
-// at 2× so the labels stay about the size of the old Press Start 2P ones.
-const LABEL_FONT = { family: 'Pixel Operator 8', size: '16px' };
+// index.css (Jersey 10, OFL). It is drawn on a 10px pixel grid, so we render
+// at an exact 2× for crisp pixels.
+const LABEL_FONT = { family: 'Jersey 10', size: '20px' };
 
 /**
  * Loader file that resolves once a CSS-declared web font is usable, so Phaser

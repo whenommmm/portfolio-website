@@ -1,19 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Pixel Operator 8 (Brackeys platformer pack, CC0) — used by the in-game
-   block labels drawn by Phaser. Loaded locally so the game can wait for it. */
+/* Jersey 10 (SIL Open Font License) — used by the in-game question-block
+   labels drawn by Phaser. Loaded locally so the game can wait for it. */
 @font-face {
-  font-family: "Pixel Operator 8";
-  src: url("./assets/fonts/PixelOperator8.ttf") format("truetype");
+  font-family: "Jersey 10";
+  src: url("./assets/fonts/Jersey10-Regular.ttf") format("truetype");
   font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-@font-face {
-  font-family: "Pixel Operator 8";
-  src: url("./assets/fonts/PixelOperator8-Bold.ttf") format("truetype");
-  font-weight: 700;
   font-style: normal;
   font-display: block;
 }
