@@ -187,6 +187,24 @@ const projects = [
   },
   {
     index: '02',
+    title: 'Griddle',
+    tech: ['Unity', 'C#', 'WebGL', 'Puzzle'],
+    description: 'A crossword with amnesia — guess words Wordle-style without clues as the grid confesses global deduction rules with each solve.',
+    highlights: [
+      'Cryptic rule-deduction puzzle mechanic',
+      'Wordle-style letter validation & feedback',
+      '20 hand-crafted progression levels',
+      'Daily puzzle mode with persistent streaks',
+      'Endless procedural puzzle generation',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/whenommmm/griddle.git' },
+      { label: 'Play Demo', href: 'https://whenommm.itch.io/playgriddle' },
+    ],
+    accent: 'blue',
+  },
+  {
+    index: '03',
     title: 'FallingBlocks',
     tech: ['Unity', 'C#', 'WebGL'],
     description: 'A 2D arcade survival game focused on Unity mechanics and scripting fundamentals.',
@@ -201,10 +219,10 @@ const projects = [
       { label: 'GitHub', href: 'https://github.com/whenommm' },
       { label: 'Play Demo', href: 'https://whenommmm.github.io/falling-blocks-build/' },
     ],
-    accent: 'blue',
+    accent: 'violet',
   },
   {
-    index: '03',
+    index: '04',
     title: 'SphereRunner',
     tech: ['Unity', 'C#', 'Game Design'],
     description: 'A precision-focused 2D runner built around movement timing and obstacle patterns.',
@@ -216,10 +234,10 @@ const projects = [
       'Level progression structure',
     ],
     links: [{ label: 'GitHub', href: 'https://github.com/whenommm' }],
-    accent: 'violet',
+    accent: 'cyan',
   },
   {
-    index: '04',
+    index: '05',
     title: 'WorldOfShadows',
     tech: ['GDevelop', 'Photopea', 'Level Design'],
     description: 'A single-level 2D platformer focused on event-driven logic and gameplay readability.',
@@ -231,7 +249,7 @@ const projects = [
       'Platform readability',
     ],
     links: [{ label: 'Play Demo', href: 'https://gd.games/games/52c558b6-0bc4-4209-bfc3-84e4d6da34fe' }],
-    accent: 'cyan',
+    accent: 'amber',
   },
 ];
 
@@ -288,18 +306,21 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Project grid */}
+      {/* Project grid: 2 - 2 - 1 */}
       <section className="relative mx-auto max-w-6xl px-6 pb-32">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-7">
-          {projects.map((p, i) => (
-            <div
-              key={p.title}
-              className="animate-fade-up"
-              style={{ animationDelay: `${0.4 + i * 0.12}s` }}
-            >
-              <ProjectCard {...p} />
-            </div>
-          ))}
+          {projects.map((p, i) => {
+            const isLast = i === projects.length - 1;
+            return (
+              <div
+                key={p.title}
+                className={`animate-fade-up ${isLast ? 'md:col-span-2 md:max-w-xl md:w-full md:mx-auto' : ''}`}
+                style={{ animationDelay: `${0.4 + i * 0.12}s` }}
+              >
+                <ProjectCard {...p} />
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Return to World ───────────────────────────────────────────────── */}
