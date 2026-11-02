@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { startPhaserGame } from './PhaserGame';
 import { EventBus } from './EventBus';
 import { Volume2, VolumeX } from 'lucide-react';
+import SectionsMenu from '../components/SectionsMenu';
 
 export default function GameContainer({ isMuted, toggleMute }) {
   const gameRef = useRef(null);
@@ -56,8 +57,9 @@ export default function GameContainer({ isMuted, toggleMute }) {
         id="phaser-game"
         className="relative w-full h-full overflow-hidden"
       >
-        {/* Mute Controls Overlay */}
-        <div className="absolute top-4 right-4 z-10">
+        {/* Sections menu + mute controls overlay */}
+        <div className="absolute top-4 right-4 z-10 flex items-start gap-2">
+          <SectionsMenu />
           <button
             onClick={toggleMute}
             className="p-2 retro-btn bg-[#282828] hover:bg-[#383838] text-white flex items-center justify-center cursor-pointer"

@@ -180,7 +180,7 @@ const projects = [
     ],
     achievement: 'Ranked #228 overall and #120 in Enjoyment among 523 entries.',
     links: [
-      { label: 'GitHub', href: 'https://github.com/whenommm' },
+      { label: 'GitHub', href: 'https://github.com/whenommmm/PongPing' },
       { label: 'Play Demo', href: 'https://whenommm.itch.io/pongping' },
     ],
     accent: 'amber',
@@ -198,7 +198,7 @@ const projects = [
       'Endless procedural puzzle generation',
     ],
     links: [
-      { label: 'GitHub', href: 'https://github.com/whenommmm/griddle.git' },
+      { label: 'GitHub', href: 'https://github.com/whenommmm/griddle' },
       { label: 'Play Demo', href: 'https://whenommm.itch.io/playgriddle' },
     ],
     accent: 'blue',
@@ -216,7 +216,7 @@ const projects = [
       'Event-driven game systems',
     ],
     links: [
-      { label: 'GitHub', href: 'https://github.com/whenommm' },
+      { label: 'GitHub', href: 'https://github.com/whenommmm/falling-blocks' },
       { label: 'Play Demo', href: 'https://whenommmm.github.io/falling-blocks-build/' },
     ],
     accent: 'violet',
@@ -233,7 +233,7 @@ const projects = [
       'Collision systems',
       'Level progression structure',
     ],
-    links: [{ label: 'GitHub', href: 'https://github.com/whenommm' }],
+    links: [{ label: 'GitHub', href: 'https://github.com/whenommmm/SphereRunner' }],
     accent: 'cyan',
   },
   {

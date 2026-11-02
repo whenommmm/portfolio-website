@@ -38,8 +38,8 @@ const METHODS = [
   },
   {
     label: 'GitHub',
-    value: 'github.com/whenommm',
-    href: 'https://github.com/whenommm',
+    value: 'github.com/whenommmm',
+    href: 'https://github.com/whenommmm',
     icon: GithubIcon,
     external: true,
   },
@@ -171,7 +171,11 @@ export default function ContactPage() {
 
       {/* Contact methods — circular layout */}
       <section className="relative z-10 mx-auto mt-20 flex w-full max-w-[640px] items-center justify-center px-6 pb-32 sm:mt-24">
-        <div className="relative aspect-square w-full" style={{ ['--radius']: '42%' }}>
+        {/* --orbit-r: node distance from the center. Phones get a tighter ring
+            and smaller nodes: that's the only fit where a node swinging past
+            the screen edge keeps its label on screen without neighbours
+            overlapping. */}
+        <div className="relative aspect-square w-full [--orbit-r:37%] sm:[--orbit-r:40%]">
           {/* Decorative rings */}
           <div
             aria-hidden
@@ -206,14 +210,14 @@ export default function ContactPage() {
             {METHODS.map((m, i) => {
               const angle = -90 + i * (360 / METHODS.length);
               const rad = (angle * Math.PI) / 180;
-              const x = 50 + Math.cos(rad) * 42;
-              const y = 50 + Math.sin(rad) * 42;
+              const x = Math.cos(rad).toFixed(4);
+              const y = Math.sin(rad).toFixed(4);
               return (
                 <div
                   key={m.label}
                   style={{
-                    left: `${x}%`,
-                    top: `${y}%`,
+                    left: `calc(50% + ${x} * var(--orbit-r))`,
+                    top: `calc(50% + ${y} * var(--orbit-r))`,
                     position: 'absolute',
                     transform: 'translate(-50%, -50%)',
                   }}
@@ -231,8 +235,8 @@ export default function ContactPage() {
                       rel={m.external ? 'noopener noreferrer' : undefined}
                       className="group block animate-orbit-counter-slow"
                     >
-                      <div className="relative flex flex-col items-center gap-3">
-                        <div className="relative grid h-20 w-20 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-cream backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-glow-amber group-hover:shadow-amber-glow sm:h-24 sm:w-24">
+                      <div className="relative flex flex-col items-center gap-2 sm:gap-3">
+                        <div className="relative grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-cream backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-glow-amber group-hover:shadow-amber-glow sm:h-24 sm:w-24">
                           <m.icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />
                           <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5" />
                           <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-glow-amber group-hover:opacity-100" />
@@ -241,7 +245,7 @@ export default function ContactPage() {
                           <div className="font-mono text-[9px] tracking-[0.3em] text-ink-muted sm:text-[10px]">
                             {m.label.toUpperCase()}
                           </div>
-                          <div className="mt-1 max-w-[140px] truncate text-[11px] text-ink-foreground/80 transition-colors group-hover:text-ink-foreground sm:text-[12px]">
+                          <div className="mt-1 max-w-[104px] truncate text-[11px] text-ink-foreground/80 transition-colors group-hover:text-ink-foreground sm:max-w-[150px] sm:text-[12px]">
                             {m.value}
                           </div>
                         </div>
