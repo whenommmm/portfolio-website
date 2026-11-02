@@ -18,6 +18,13 @@ const STAR_TWINKLE = { start: 0, end: 12 };
 // index.css (Jersey 10, OFL). It is drawn on a 10px pixel grid, so we render
 // at an exact 2× for crisp pixels.
 const LABEL_FONT = { family: 'Jersey 10', size: '20px' };
+const LABEL_COLOR = { normal: '#ffe5b3', hover: '#ffffff' }; // warm amber-white
+
+// Question-block tints. The block textures carry their own colours, so at rest
+// they're dimmed a touch, leaving room to brighten to full while a mouse hovers
+// (a spent block still opens its page, so it brightens too).
+const BLOCK_TINT = { live: 0xe4e4e4, liveHover: 0xffffff, hit: 0xd0d0d0, hitHover: 0xffffff };
+const BLOCK_HOVER_LIFT = 4; // px the block and its label rise while hovered
 
 /**
  * Loader file that resolves once a CSS-declared web font is usable, so Phaser
@@ -226,29 +233,36 @@ export default class MainScene extends Phaser.Scene {
       block.setData('isHit', false);
       block.setData('originalY', data.y);
       block.setData('glow', glow); // store reference to glow
+      block.setData('hovered', false);
       block.setOrigin(0.5);
-      block.setTint(0xffddaa); // Warm amber tint
-
-      // Tap/click opens the section too, so the portfolio is reachable without
-      // a keyboard. The hit area (local texture coords) is padded to 96×96 to
-      // take in the label, since a 32px block is tiny on a phone screen.
-      block.setInteractive({
-        hitArea: new Phaser.Geom.Rectangle(-32, -48, 96, 96),
-        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-        useHandCursor: true,
-      });
-      // pointerup, not pointerdown: navigating mid-tap would let the touch's
-      // follow-up click land on whatever the new page draws under the finger
-      block.on('pointerup', () => this.handleBlockTap(block));
+      block.setTint(this.blockTint(block));
 
       // Label Text above block
-      this.add.text(data.x, data.y - 32, data.label, {
+      const label = this.add.text(data.x, data.y - 32, data.label, {
         fontFamily: `"${LABEL_FONT.family}"`,
         fontSize: LABEL_FONT.size,
-        color: '#ffe5b3', // Warm premium amber-white
+        color: LABEL_COLOR.normal,
         stroke: '#050816', // Deep navy stroke
         strokeThickness: 3
       }).setOrigin(0.5);
+      block.setData('labelText', label);
+
+      // Tap/click opens the section too, so the portfolio is reachable without
+      // a keyboard. The target is a 96×96 zone taking in the block and label,
+      // since a 32px block is tiny on a phone screen. It's a separate object
+      // that stays put while the block bounces or lifts on hover, so the target
+      // never slides out from under a still cursor.
+      const hitZone = this.add.zone(data.x, data.y - 16, 96, 96)
+        .setInteractive({ useHandCursor: true });
+      // pointerup, not pointerdown: navigating mid-tap would let the touch's
+      // follow-up click land on whatever the new page draws under the finger
+      hitZone.on('pointerup', () => this.handleBlockTap(block));
+      // Hover is for mice only: touch has no hover, and a tap would leave the
+      // block lifted when the player comes back from the page
+      hitZone.on('pointerover', (pointer) => {
+        if (!pointer.wasTouch) this.setBlockHover(block, true);
+      });
+      hitZone.on('pointerout', () => this.setBlockHover(block, false));
     });
 
     // 6. Create Player
@@ -529,7 +543,7 @@ export default class MainScene extends Phaser.Scene {
     if (!isAlreadyHit) {
       block.setData('isHit', true);
       block.setTexture('hit_block');
-      block.setTint(0x667788); // Dark deactivated slate tint
+      block.setTint(this.blockTint(block)); // dark deactivated slate
       this.playSynthSound('bump');
 
       // Fade out and destroy the glow behind the block
@@ -545,6 +559,7 @@ export default class MainScene extends Phaser.Scene {
           ease: 'Quad.easeOut',
           onComplete: () => {
             glow.destroy();
+            block.setData('glow', null);
           }
         });
       }
@@ -586,9 +601,41 @@ export default class MainScene extends Phaser.Scene {
       yoyo: true,
       ease: 'Quad.easeOut',
       onComplete: () => {
-        block.y = originalY;
+        block.y = this.blockRestY(block);
       }
     });
+  }
+
+  blockTint(block) {
+    const hovered = block.getData('hovered');
+    return block.getData('isHit')
+      ? (hovered ? BLOCK_TINT.hitHover : BLOCK_TINT.hit)
+      : (hovered ? BLOCK_TINT.liveHover : BLOCK_TINT.live);
+  }
+
+  /** Where the block sits at rest: its spot in the level, raised while hovered. */
+  blockRestY(block) {
+    return block.getData('originalY') - (block.getData('hovered') ? BLOCK_HOVER_LIFT : 0);
+  }
+
+  /** Mouse hover: lift the block and its label, brighten both, and let the glow add light. */
+  setBlockHover(block, hovered) {
+    if (block.getData('hovered') === hovered) return;
+    block.setData('hovered', hovered);
+    block.setTint(this.blockTint(block));
+
+    const label = block.getData('labelText');
+    label.setColor(hovered ? LABEL_COLOR.hover : LABEL_COLOR.normal);
+
+    // Cuts a bump bounce short only if the cursor leaves mid-bounce
+    this.tweens.killTweensOf([block, label]);
+    const lift = { duration: 120, ease: 'Quad.easeOut' };
+    this.tweens.add({ targets: block, y: this.blockRestY(block), ...lift });
+    this.tweens.add({ targets: label, y: this.blockRestY(block) - 32, ...lift });
+
+    // Additive blending brightens the glow without fighting its pulse tween
+    const glow = block.getData('glow');
+    if (glow) glow.setBlendMode(hovered ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL);
   }
 
   spawnStar(x, y) {
@@ -649,47 +696,71 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('brick', brickArt, colors, 2);
 
-    // 2. QUESTION BLOCK (32x32)
+    // 2. QUESTION BLOCK (32x32) — a bronze lantern: riveted, bevelled frame
+    //    around a warm inset with a glowing, centered "?". Has its own palette.
+    const blockColors = {
+      'K': '#120a06', // Outline
+      'H': '#f6cf86', // Frame highlight (top/left)
+      'B': '#c98a3c', // Frame bronze
+      'D': '#7a4519', // Frame shadow (bottom/right)
+      'R': '#fff3d1', // Rivets
+      'I': '#3a1d0b', // Inset
+      'i': '#24110a', // Inset shadow (top/left)
+      'j': '#5a2c10', // Inset lit edge (bottom/right)
+      'Y': '#fff4cc'  // Glowing "?"
+    };
     const questionArt = [
-      "GGGGGGGGGGGGGGGG",
-      "GYYYYYYYYYYYYYOG",
-      "GYWWWWWWWWWWWYOG",
-      "GYWYYYYYYYYYWYOG",
-      "GYWYGGGGGYYYWYOG",
-      "GYWYGYYYGYYYWYOG",
-      "GYWYYYYYGYYYWYOG",
-      "GYWYYYGGYYYYWYOG",
-      "GYWYYYGYYYYYWYOG",
-      "GYWYYYYYYYYYWYOG",
-      "GYWYYYGYYYYYWYOG",
-      "GYWYYYYYYYYYWYOG",
-      "GYWWWWWWWWWWWYOG",
-      "GYOOOOOOOOOOOYOG",
-      "GOGGGGGGGGGGGGOG",
-      "GGGGGGGGGGGGGGGG"
+      "KKKKKKKKKKKKKKKK",
+      "KHHHHHHHHHHHHHBK",
+      "KHRBBBBBBBBBBRDK",
+      "KHBiiiiiiiiiiBDK",
+      "KHBiIIYYYYIIjBDK",
+      "KHBiIYYIIYYIjBDK",
+      "KHBiIIIIIYYIjBDK",
+      "KHBiIIIIYYIIjBDK",
+      "KHBiIIIYYIIIjBDK",
+      "KHBiIIIYYIIIjBDK",
+      "KHBiIIIIIIIIjBDK",
+      "KHBiIIIYYIIIjBDK",
+      "KHBijjjjjjjjjBDK",
+      "KHRBBBBBBBBBBRDK",
+      "KBDDDDDDDDDDDDDK",
+      "KKKKKKKKKKKKKKKK"
     ];
-    this.drawScaledTexture('question_block', questionArt, colors, 2);
+    this.drawScaledTexture('question_block', questionArt, blockColors, 2);
 
-    // 3. HIT BLOCK (32x32)
+    // 3. HIT BLOCK (32x32) — the same lantern gone cold: grey bronze, the "?"
+    //    burnt down to a ghost so it still reads as the same, spent block
+    const spentBlockColors = {
+      'K': '#0d0b0a', // Outline
+      'H': '#8a7a66', // Frame highlight
+      'B': '#5e5145', // Frame
+      'D': '#3a2f25', // Frame shadow
+      'R': '#a89a88', // Rivets
+      'I': '#1a1512', // Inset
+      'i': '#120e0c', // Inset shadow
+      'j': '#2a221c', // Inset lit edge
+      'g': '#2e2620'  // Ghost "?"
+    };
     const hitArt = [
-      "GGGGGGGGGGGGGGGG",
-      "GKKKKKKKKKKKKKHG",
-      "GKHHHHHHHHHHHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHGGGGGGGGGHKHG",
-      "GKHHHHHHHHHHHKHG",
-      "GKKKKKKKKKKKKKHG",
-      "GGGGGGGGGGGGGGGG"
+      "KKKKKKKKKKKKKKKK",
+      "KHHHHHHHHHHHHHBK",
+      "KHRBBBBBBBBBBRDK",
+      "KHBiiiiiiiiiiBDK",
+      "KHBiIIggggIIjBDK",
+      "KHBiIggIIggIjBDK",
+      "KHBiIIIIIggIjBDK",
+      "KHBiIIIIggIIjBDK",
+      "KHBiIIIggIIIjBDK",
+      "KHBiIIIggIIIjBDK",
+      "KHBiIIIIIIIIjBDK",
+      "KHBiIIIggIIIjBDK",
+      "KHBijjjjjjjjjBDK",
+      "KHRBBBBBBBBBBRDK",
+      "KBDDDDDDDDDDDDDK",
+      "KKKKKKKKKKKKKKKK"
     ];
-    this.drawScaledTexture('hit_block', hitArt, colors, 2);
+    this.drawScaledTexture('hit_block', hitArt, spentBlockColors, 2);
 
     // 6. BUSH SCENERY TEXTURE (64x48)
     const bushArt = [
