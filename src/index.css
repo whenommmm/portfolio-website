@@ -338,6 +338,65 @@
     box-shadow: 1px 1px 0px #000;
   }
 
+  /* ── Pixel game button (Return to World on every section page) ── */
+  .pixel-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 24px 10px 16px;
+    font-family: "Jersey 10", monospace;
+    font-size: 28px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #1a0f05;
+    background: #ffb84d;
+    border: 3px solid #120a06;
+    /* pixel bevel: light top edge, thick darker bottom edge for depth, hard drop */
+    box-shadow: inset 0 3px 0 #ffdb94, inset 0 -7px 0 #c9741f, 0 5px 0 #000;
+    cursor: pointer;
+    transition: transform 90ms steps(2), box-shadow 90ms steps(2), background-color 120ms;
+  }
+  .pixel-button:hover {
+    background: #ffc766;
+    transform: translateY(-2px);
+    box-shadow: inset 0 3px 0 #ffe3a8, inset 0 -7px 0 #d9832a, 0 7px 0 #000;
+  }
+  /* pressed: the face sinks and the thick bottom edge thins out */
+  .pixel-button:active {
+    transform: translateY(4px);
+    box-shadow: inset 0 3px 0 #ffdb94, inset 0 -3px 0 #c9741f, 0 1px 0 #000;
+  }
+  .pixel-button:focus-visible { outline: 3px solid #fff4cc; outline-offset: 6px; }
+
+  /* Knight from the game's sprite sheet (8×8 cells of 32px) at 2×, cropped to
+     the 14×19 box its idle and run frames fit in (x 8–21, y 9–27 of a cell) */
+  .knight-icon {
+    width: 28px;
+    height: 38px;
+    flex-shrink: 0;
+    background: url("./assets/sprites/knight.png") no-repeat;
+    background-size: 512px 512px;
+    background-position: -16px -18px;
+    image-rendering: pixelated;
+    animation: knight-idle 0.66s steps(4) infinite;
+  }
+  .pixel-button:hover .knight-icon { animation: knight-run 0.5s steps(8) infinite; }
+}
+
+/* Knight frames: idle is row 0 (frames 0–3), run is row 2 (frames 16–23) */
+@keyframes knight-idle {
+  from { background-position: -16px -18px; }
+  to   { background-position: -272px -18px; }
+}
+@keyframes knight-run {
+  from { background-position: -16px -146px; }
+  to   { background-position: -528px -146px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .knight-icon, .pixel-button:hover .knight-icon { animation: none; }
+}
+
+@layer utilities {
   /* ── Scanlines overlay ── */
   .scanlines::before {
     content: "";
