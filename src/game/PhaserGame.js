@@ -35,6 +35,12 @@ const baseConfig = {
   audio: {
     noAudio: true // Bypass Phaser's audio manager to prevent closed AudioContext HMR warnings
   },
+  input: {
+    // Only take pointer input that lands on the canvas itself. By default Phaser
+    // also listens on window, so a click on an overlay (the title screen, the
+    // Sections menu) would activate whatever block sits underneath it.
+    windowEvents: false
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH

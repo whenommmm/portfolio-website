@@ -60,7 +60,7 @@ const CLOUD_FRAMES = [
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super('MainScene');
-    this.isPaused = true; // Start paused for the welcome tutorial popup
+    this.isPaused = true; // Paused until the title screen is dismissed (close-modal)
     // Block type → route mapping
     this.blockRoutes = {
       intro:      '/about',
@@ -70,6 +70,7 @@ export default class MainScene extends Phaser.Scene {
       contact:    '/contact',
     };
     this.audioCtx = null;
+    this.pendingSection = null; // delayed navigation from a block, see openBlockSection()
     this.viewportTextureVersion = 0;
     this.groundBricks = [];
   }
@@ -228,6 +229,18 @@ export default class MainScene extends Phaser.Scene {
       block.setOrigin(0.5);
       block.setTint(0xffddaa); // Warm amber tint
 
+      // Tap/click opens the section too, so the portfolio is reachable without
+      // a keyboard. The hit area (local texture coords) is padded to 96×96 to
+      // take in the label, since a 32px block is tiny on a phone screen.
+      block.setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(-32, -48, 96, 96),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        useHandCursor: true,
+      });
+      // pointerup, not pointerdown: navigating mid-tap would let the touch's
+      // follow-up click land on whatever the new page draws under the finger
+      block.on('pointerup', () => this.handleBlockTap(block));
+
       // Label Text above block
       this.add.text(data.x, data.y - 32, data.label, {
         fontFamily: `"${LABEL_FONT.family}"`,
@@ -337,9 +350,9 @@ export default class MainScene extends Phaser.Scene {
       this.keysPressed.left = false;
       this.keysPressed.right = false;
       this.keysPressed.up = false;
-      // Unpause the scene input (isPaused was never set on navigation,
-      // but ensure it's cleared in case of any edge case)
-      this.isPaused = false;
+      // isPaused is deliberately left alone: only dismissing the title screen
+      // unpauses. A visitor who lands on a page first and then comes home
+      // still gets the title, and the knight must not move behind it.
       // Re-zero velocity so the player isn't sliding on return
       if (this.player) {
         this.player.setVelocityX(0);
@@ -493,47 +506,71 @@ export default class MainScene extends Phaser.Scene {
   handleBlockCollision(player, block) {
     // Ensure collision comes from BELOW the block (player hitting it with their head)
     if (player.body.touching.up && block.body.touching.down) {
-      const isAlreadyHit = block.getData('isHit');
-      
-      // Perform bounce tween regardless
+      this.bumpBlock(block);
+    }
+  }
+
+  /** Tapped or clicked: same as a bump, except a spent block still opens its section. */
+  handleBlockTap(block) {
+    if (block.getData('isHit')) {
       this.bounceBlock(block);
+      this.openBlockSection(block);
+    } else {
+      this.bumpBlock(block);
+    }
+  }
 
-      if (!isAlreadyHit) {
-        block.setData('isHit', true);
-        block.setTexture('hit_block');
-        block.setTint(0x667788); // Dark deactivated slate tint
-        this.playSynthSound('bump');
+  bumpBlock(block) {
+    const isAlreadyHit = block.getData('isHit');
 
-        // Fade out and destroy the glow behind the block
-        const glow = block.getData('glow');
-        if (glow) {
-          this.tweens.killTweensOf(glow);
-          this.tweens.add({
-            targets: glow,
-            alpha: 0,
-            scaleX: 1,
-            scaleY: 1,
-            duration: 300,
-            ease: 'Quad.easeOut',
-            onComplete: () => {
-              glow.destroy();
-            }
-          });
-        }
+    // Perform bounce tween regardless
+    this.bounceBlock(block);
 
-        // Spawn a floating retro star
-        this.spawnStar(block.x, block.y - 16);
+    if (!isAlreadyHit) {
+      block.setData('isHit', true);
+      block.setTexture('hit_block');
+      block.setTint(0x667788); // Dark deactivated slate tint
+      this.playSynthSound('bump');
 
-        // Navigate to the corresponding route
-        this.time.delayedCall(200, () => {
-          const blockType = block.getData('type');
-          const route = this.blockRoutes[blockType];
-          if (route) {
-            EventBus.emit('navigate-to', { route });
+      // Fade out and destroy the glow behind the block
+      const glow = block.getData('glow');
+      if (glow) {
+        this.tweens.killTweensOf(glow);
+        this.tweens.add({
+          targets: glow,
+          alpha: 0,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 300,
+          ease: 'Quad.easeOut',
+          onComplete: () => {
+            glow.destroy();
           }
         });
       }
+
+      // Spawn a floating retro star
+      this.spawnStar(block.x, block.y - 16);
+
+      this.openBlockSection(block);
     }
+  }
+
+  /**
+   * Navigate to the block's route after a short beat. Only one at a time: a
+   * second tap inside the delay would queue another timer, which the scene
+   * pause on navigation freezes until the player comes back, and then it
+   * fires and sends them straight back to the page.
+   */
+  openBlockSection(block) {
+    if (this.pendingSection) return;
+    this.pendingSection = this.time.delayedCall(200, () => {
+      this.pendingSection = null;
+      const route = this.blockRoutes[block.getData('type')];
+      if (route) {
+        EventBus.emit('navigate-to', { route });
+      }
+    });
   }
 
   bounceBlock(block) {
@@ -599,11 +636,11 @@ export default class MainScene extends Phaser.Scene {
       "DODDDDDODDDDDOGD",
       "DOGGGGGOGGGGGOGD",
       "DODDDDDODDDDDOGD",
-      "DOOOOOOODOOOOOOGD",
+      "DOOOOOOODOOOOOGD",
       "DDDDDODDDDDODDDD",
       "OOOODODDDDDODDDD",
       "DDDDDOGGGGGOGGGG",
-      "DOOOOOOODOOOOOOGD",
+      "DOOOOOOODOOOOOGD",
       "DODDDDDODDDDDOGD",
       "DODDDDDODDDDDOGD",
       "DOGGGGGOGGGGGOGD",
@@ -621,10 +658,10 @@ export default class MainScene extends Phaser.Scene {
       "GYWYGGGGGYYYWYOG",
       "GYWYGYYYGYYYWYOG",
       "GYWYYYYYGYYYWYOG",
-      "GYWYYYGGYYYWYOG ",
-      "GYWYYYGYYYYWYOG",
+      "GYWYYYGGYYYYWYOG",
+      "GYWYYYGYYYYYWYOG",
       "GYWYYYYYYYYYWYOG",
-      "GYWYYYGYYYYWYOG",
+      "GYWYYYGYYYYYWYOG",
       "GYWYYYYYYYYYWYOG",
       "GYWWWWWWWWWWWYOG",
       "GYOOOOOOOOOOOYOG",

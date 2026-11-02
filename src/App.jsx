@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import GameContainer from './game/GameContainer';
 import { EventBus } from './game/EventBus';
 
@@ -494,6 +494,8 @@ export default function App() {
         <Route path="/experience" element={<ExperiencePage />} />
         <Route path="/resume"     element={<ResumePage />} />
         <Route path="/contact"    element={<ContactPage />} />
+        {/* Unknown paths go back to the game instead of a blank page */}
+        <Route path="*"           element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
