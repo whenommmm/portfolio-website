@@ -43,7 +43,9 @@ const accentMap = {
 };
 
 // ── Project Card ──────────────────────────────────────────────────────────────
-function ProjectCard({ index, title, tech, description, highlights, achievement, links, accent }) {
+const linkIcons = { GitHub: GithubIcon, 'Jam Results': Trophy };
+
+function ProjectCard({ index, title, tech, description, highlights, achievement, jam, links, accent }) {
   const a = accentMap[accent];
   return (
     <article
@@ -120,17 +122,42 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
 
         {achievement && (
           <div
-            className="mt-5 flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3"
+            className="mt-5 rounded-lg border border-white/10 bg-white/[0.03] p-3"
             style={{ borderColor: `${a.from}30` }}
           >
-            <Trophy className={`h-4 w-4 shrink-0 ${a.text}`} style={{ color: a.from }} />
-            <p className="text-xs leading-relaxed text-white/80">{achievement}</p>
+            <div className="flex items-start gap-3">
+              <Trophy className={`h-4 w-4 shrink-0 ${a.text}`} style={{ color: a.from }} />
+              <p className="text-pretty text-xs leading-relaxed text-white/80">{achievement}</p>
+            </div>
+
+            {/* Per-category jam ranks */}
+            {jam && (
+              <>
+                <dl
+                  className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t pt-3 sm:grid-cols-3"
+                  style={{ borderColor: `${a.from}20` }}
+                >
+                  {jam.ranks.map(([label, rank]) => (
+                    <div key={label} className="flex flex-col-reverse justify-end gap-0.5">
+                      <dt className="font-mono text-[9px] uppercase leading-snug tracking-wider text-white/45">{label}</dt>
+                      <dd className="font-display text-lg font-semibold leading-none" style={{ color: a.from }}>
+                        #{rank}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-3 font-mono text-[9px] uppercase tracking-wider text-white/35">
+                  Of {jam.entries} entries · from {jam.ratings} community ratings
+                </p>
+              </>
+            )}
           </div>
         )}
 
         <div className="mt-6 flex flex-wrap gap-2">
           {links.map((link) => {
             const isDemo = link.label === 'Play Demo';
+            const Icon = linkIcons[link.label] ?? Play;
             return (
               <a
                 key={link.label}
@@ -151,7 +178,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
                     : undefined
                 }
               >
-                {link.label === 'GitHub' ? <GithubIcon className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                <Icon className="h-3.5 w-3.5" />
                 {link.label}
                 <ArrowUpRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
               </a>
@@ -167,6 +194,38 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
 const projects = [
   {
     index: '01',
+    title: 'Monsters Inc.',
+    tech: ['Unity', 'C#', 'WebGL', 'Puzzle', 'Game Jam'],
+    description: 'A turn-based block-pushing puzzle game: monsters crawl out of the closets toward your bed, and toy blocks and wall outlets are all you have to stop them.',
+    highlights: [
+      'Turn-based grid movement & block pushing',
+      'Outlet turrets powered by pushed blocks',
+      'Monsters detour or chew through walls',
+      'Full monster schedule shown up front',
+      'Unlimited undo & instant restart',
+      '10 rooms, each with one exact solution',
+    ],
+    achievement: 'Ranked #43 overall out of 238 entries in the Bezi Mega Jam 2026, made solo.',
+    jam: {
+      entries: 238,
+      ratings: 23,
+      ranks: [
+        ['Overall', 43],
+        ['Scope & Completion', 25],
+        ['Technical Execution', 40],
+        ['Polish & Presentation', 40],
+        ['Gameplay & Core Idea', 43],
+        ['Creativity & Theme', 93],
+      ],
+    },
+    links: [
+      { label: 'Play Demo', href: 'https://whenommm.itch.io/monsters-inc' },
+      { label: 'Jam Results', href: 'https://itch.io/jam/bezi-mega-jam-1/rate/5068009' },
+    ],
+    accent: 'violet',
+  },
+  {
+    index: '02',
     title: 'PongPing',
     tech: ['Unity', 'C#', 'WebGL', 'Game Jam'],
     description: 'A reverse-pong inspired arcade game where the player controls the ball instead of paddles.',
@@ -186,7 +245,7 @@ const projects = [
     accent: 'amber',
   },
   {
-    index: '02',
+    index: '03',
     title: 'Griddle',
     tech: ['Unity', 'C#', 'WebGL', 'Puzzle'],
     description: 'A crossword with amnesia — guess words Wordle-style without clues as the grid confesses global deduction rules with each solve.',
@@ -204,7 +263,7 @@ const projects = [
     accent: 'blue',
   },
   {
-    index: '03',
+    index: '04',
     title: 'FallingBlocks',
     tech: ['Unity', 'C#', 'WebGL'],
     description: 'A 2D arcade survival game focused on Unity mechanics and scripting fundamentals.',
@@ -222,7 +281,7 @@ const projects = [
     accent: 'violet',
   },
   {
-    index: '04',
+    index: '05',
     title: 'SphereRunner',
     tech: ['Unity', 'C#', 'Game Design'],
     description: 'A precision-focused 2D runner built around movement timing and obstacle patterns.',
@@ -237,7 +296,7 @@ const projects = [
     accent: 'cyan',
   },
   {
-    index: '05',
+    index: '06',
     title: 'WorldOfShadows',
     tech: ['GDevelop', 'Photopea', 'Level Design'],
     description: 'A single-level 2D platformer focused on event-driven logic and gameplay readability.',
@@ -305,15 +364,15 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Project grid: 2 - 2 - 1 */}
+      {/* Project grid: two per row; an odd last card is centred on its own row */}
       <section className="relative mx-auto max-w-6xl px-6 pb-32">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-7">
           {projects.map((p, i) => {
-            const isLast = i === projects.length - 1;
+            const isLoneLast = i === projects.length - 1 && projects.length % 2 === 1;
             return (
               <div
                 key={p.title}
-                className={`animate-fade-up ${isLast ? 'md:col-span-2 md:max-w-xl md:w-full md:mx-auto' : ''}`}
+                className={`animate-fade-up ${isLoneLast ? 'md:col-span-2 md:max-w-xl md:w-full md:mx-auto' : ''}`}
                 style={{ animationDelay: `${0.4 + i * 0.12}s` }}
               >
                 <ProjectCard {...p} />
