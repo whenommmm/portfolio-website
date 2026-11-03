@@ -10,6 +10,14 @@ function GithubIcon({ className }) {
   );
 }
 
+function XIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+    </svg>
+  );
+}
+
 // ── Accent map ────────────────────────────────────────────────────────────────
 const accentMap = {
   amber: {
@@ -43,13 +51,13 @@ const accentMap = {
 };
 
 // ── Project Card ──────────────────────────────────────────────────────────────
-const linkIcons = { GitHub: GithubIcon, 'Jam Results': Trophy };
+const linkIcons = { GitHub: GithubIcon, 'Jam Results': Trophy, 'Post on X': XIcon };
 
-function ProjectCard({ index, title, tech, description, highlights, achievement, jam, links, accent }) {
+function ProjectCard({ index, title, tech, description, highlights, achievement, ranks, links, accent }) {
   const a = accentMap[accent];
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-xl transition-all duration-500 ${a.border} ${a.ring} hover:-translate-y-1`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-xl transition-all duration-500 ${a.border} ${a.ring} hover:-translate-y-1`}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -87,7 +95,8 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
         </div>
       </div>
 
-      <div className="relative p-6 sm:p-7">
+      {/* Fills the card, so the links sit on the bottom edge whatever the content length */}
+      <div className="relative flex flex-1 flex-col p-6 sm:p-7">
         <h3
           className={`text-2xl sm:text-[1.75rem] font-semibold tracking-tight text-gradient-card-${accent}`}
           style={{ filter: `drop-shadow(0 0 24px ${a.from}30)`, letterSpacing: '-0.01em' }}
@@ -131,30 +140,25 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
             </div>
 
             {/* Per-category jam ranks */}
-            {jam && (
-              <>
-                <dl
-                  className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t pt-3 sm:grid-cols-3"
-                  style={{ borderColor: `${a.from}20` }}
-                >
-                  {jam.ranks.map(([label, rank]) => (
-                    <div key={label} className="flex flex-col-reverse justify-end gap-0.5">
-                      <dt className="font-mono text-[9px] uppercase leading-snug tracking-wider text-white/45">{label}</dt>
-                      <dd className="font-display text-lg font-semibold leading-none" style={{ color: a.from }}>
-                        #{rank}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="mt-3 font-mono text-[9px] uppercase tracking-wider text-white/35">
-                  Of {jam.entries} entries · from {jam.ratings} community ratings
-                </p>
-              </>
+            {ranks && (
+              <dl
+                className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 border-t pt-3"
+                style={{ borderColor: `${a.from}20` }}
+              >
+                {ranks.map(([label, rank]) => (
+                  <div key={label} className="flex flex-row-reverse items-baseline justify-end gap-2">
+                    <dt className="font-mono text-[9px] uppercase leading-snug tracking-wider text-white/50">{label}</dt>
+                    <dd className="w-7 shrink-0 font-display text-sm font-semibold" style={{ color: a.from }}>
+                      #{rank}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             )}
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-auto flex flex-wrap gap-2 pt-6">
           {links.map((link) => {
             const isDemo = link.label === 'Play Demo';
             const Icon = linkIcons[link.label] ?? Play;
@@ -196,28 +200,24 @@ const projects = [
     index: '01',
     title: 'Monsters Inc.',
     tech: ['Unity', 'C#', 'WebGL', 'Puzzle', 'Game Jam'],
-    description: 'A turn-based block-pushing puzzle game: monsters crawl out of the closets toward your bed, and toy blocks and wall outlets are all you have to stop them.',
+    description: 'A turn-based puzzle game: stop closet monsters reaching your bed with nothing but toy blocks and wall outlets.',
     highlights: [
-      'Turn-based grid movement & block pushing',
-      'Outlet turrets powered by pushed blocks',
+      'Turn-based grid & block pushing',
+      'Outlet turrets powered by blocks',
       'Monsters detour or chew through walls',
-      'Full monster schedule shown up front',
+      'Monster schedule shown up front',
       'Unlimited undo & instant restart',
-      '10 rooms, each with one exact solution',
+      '10 rooms, one exact solution each',
     ],
-    achievement: 'Ranked #43 overall out of 238 entries in the Bezi Mega Jam 2026, made solo.',
-    jam: {
-      entries: 238,
-      ratings: 23,
-      ranks: [
-        ['Overall', 43],
-        ['Scope & Completion', 25],
-        ['Technical Execution', 40],
-        ['Polish & Presentation', 40],
-        ['Gameplay & Core Idea', 43],
-        ['Creativity & Theme', 93],
-      ],
-    },
+    achievement: 'Ranked #43 overall of 238 entries in the Bezi Mega Jam 2026, from 23 ratings. Made solo.',
+    ranks: [
+      ['Overall', 43],
+      ['Scope & Completion', 25],
+      ['Technical Execution', 40],
+      ['Polish & Presentation', 40],
+      ['Gameplay & Core Idea', 43],
+      ['Creativity & Theme', 93],
+    ],
     links: [
       { label: 'Play Demo', href: 'https://whenommm.itch.io/monsters-inc' },
       { label: 'Jam Results', href: 'https://itch.io/jam/bezi-mega-jam-1/rate/5068009' },
@@ -226,6 +226,26 @@ const projects = [
   },
   {
     index: '02',
+    title: 'Later',
+    tech: ['JavaScript', 'HTML/CSS', 'Web Audio', 'Game Jam'],
+    description: 'A 20-second dodge game with a twist: weave your little moon through bright green pills for points, until the final seconds show what you were really dodging.',
+    highlights: [
+      'Exactly 20 seconds of play',
+      'Three endings shaped by your choices',
+      'Simulated bots prove every pill is dodgeable',
+      'Mouse, touch & keyboard controls',
+      'All sound synthesized with Web Audio',
+      'Built overnight, no libraries',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/whenommmm/20-second-jam' },
+      { label: 'Play Demo', href: 'https://later-alpha.vercel.app' },
+      { label: 'Post on X', href: 'https://x.com/whenommm/status/2115937092534722593' },
+    ],
+    accent: 'cyan',
+  },
+  {
+    index: '03',
     title: 'PongPing',
     tech: ['Unity', 'C#', 'WebGL', 'Game Jam'],
     description: 'A reverse-pong inspired arcade game where the player controls the ball instead of paddles.',
@@ -245,7 +265,7 @@ const projects = [
     accent: 'amber',
   },
   {
-    index: '03',
+    index: '04',
     title: 'Griddle',
     tech: ['Unity', 'C#', 'WebGL', 'Puzzle'],
     description: 'A crossword with amnesia — guess words Wordle-style without clues as the grid confesses global deduction rules with each solve.',
@@ -263,7 +283,7 @@ const projects = [
     accent: 'blue',
   },
   {
-    index: '04',
+    index: '05',
     title: 'FallingBlocks',
     tech: ['Unity', 'C#', 'WebGL'],
     description: 'A 2D arcade survival game focused on Unity mechanics and scripting fundamentals.',
@@ -281,7 +301,7 @@ const projects = [
     accent: 'violet',
   },
   {
-    index: '05',
+    index: '06',
     title: 'SphereRunner',
     tech: ['Unity', 'C#', 'Game Design'],
     description: 'A precision-focused 2D runner built around movement timing and obstacle patterns.',
@@ -296,7 +316,7 @@ const projects = [
     accent: 'cyan',
   },
   {
-    index: '06',
+    index: '07',
     title: 'WorldOfShadows',
     tech: ['GDevelop', 'Photopea', 'Level Design'],
     description: 'A single-level 2D platformer focused on event-driven logic and gameplay readability.',
@@ -364,15 +384,15 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Project grid: two per row; an odd last card is centred on its own row */}
+      {/* Project grid: two per row, every card as tall as the tallest; an odd last card is centred on its own row */}
       <section className="relative mx-auto max-w-6xl px-6 pb-32">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-7">
+        <div className="grid grid-cols-1 gap-6 md:auto-rows-fr md:grid-cols-2 md:gap-7">
           {projects.map((p, i) => {
             const isLoneLast = i === projects.length - 1 && projects.length % 2 === 1;
             return (
               <div
                 key={p.title}
-                className={`animate-fade-up ${isLoneLast ? 'md:col-span-2 md:max-w-xl md:w-full md:mx-auto' : ''}`}
+                className={`animate-fade-up ${isLoneLast ? 'md:col-span-2 md:mx-auto md:w-[calc(50%-0.875rem)]' : ''}`}
                 style={{ animationDelay: `${0.4 + i * 0.12}s` }}
               >
                 <ProjectCard {...p} />
