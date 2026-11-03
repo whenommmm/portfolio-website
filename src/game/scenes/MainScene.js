@@ -3,6 +3,8 @@ import { EventBus } from '../EventBus';
 import knightSheetUrl from '../../assets/sprites/knight.png';
 import cloudsSheetUrl from '../../assets/sprites/clouds.png';
 import starSheetUrl   from '../../assets/sprites/star.png';
+import musicUrl       from '../../assets/audio/time-for-adventure.mp3';
+import { loadMuted } from '../audioPrefs';
 
 // The level (platforms, blocks, player spawn) is authored in a fixed
 // 1024×576 coordinate space. The actual game size follows the window's aspect
@@ -25,6 +27,13 @@ const LABEL_COLOR = { normal: '#ffe5b3', hover: '#ffffff' }; // warm amber-white
 // (a spent block still opens its page, so it brightens too).
 const BLOCK_TINT = { live: 0xe4e4e4, liveHover: 0xffffff, hit: 0xd0d0d0, hitHover: 0xffffff };
 const BLOCK_HOVER_LIFT = 4; // px the block and its label rise while hovered
+
+// Background music: "Time for Adventure" from the Brackeys platformer pack
+// (CC0), re-encoded at 96 kbps. It's 15 bars at 90 bpm, exactly 40s; the file
+// runs ~46ms longer (encoder padding, which decoders trim differently), so the
+// loop is pinned to the last 40s of whatever decodes to keep it on the beat.
+// Quiet enough to sit under the jump/bump sounds.
+const MUSIC = { volume: 0.18, loopLength: 40, fadeIn: 2.5, fadeOut: 0.5 };
 
 /**
  * Loader file that resolves once a CSS-declared web font is usable, so Phaser
@@ -77,6 +86,13 @@ export default class MainScene extends Phaser.Scene {
       contact:    '/contact',
     };
     this.audioCtx = null;
+    // Music plays only once the title is dismissed (musicOn), and goes quiet
+    // while a portfolio page covers the game (offscreen) or the tab is hidden
+    this.musicGain = null;
+    this.musicSource = null;
+    this.musicOn = false;
+    this.offscreen = false;
+    this.tabHidden = false;
     this.pendingSection = null; // delayed navigation from a block, see openBlockSection()
     this.viewportTextureVersion = 0;
     this.groundBricks = [];
@@ -106,6 +122,10 @@ export default class MainScene extends Phaser.Scene {
     };
     window.addEventListener('keydown', audioInitHandler);
     window.addEventListener('pointerdown', audioInitHandler);
+
+    // Start downloading the music now so it's ready when the title screen is
+    // dismissed; decoding has to wait for the AudioContext (first input)
+    this.musicData = fetch(musicUrl).then((r) => r.arrayBuffer()).catch(() => null);
 
     // 2. Generate Textures Programmatically
     this.generatePixelArtTextures();
@@ -354,6 +374,9 @@ export default class MainScene extends Phaser.Scene {
       if (this.game && this.game.canvas) {
         this.game.canvas.focus();
       }
+
+      this.musicOn = true;
+      this.startMusic();
     };
     EventBus.on('close-modal', closeModalListener);
 
@@ -376,14 +399,33 @@ export default class MainScene extends Phaser.Scene {
       if (this.game && this.game.canvas) {
         setTimeout(() => this.game.canvas.focus(), 50);
       }
+
+      this.offscreen = false;
+      this.updateMusic();
     };
     EventBus.on('game-resumed', gameResumedListener);
 
-    // Listen for mute toggle from React controls
+    // A portfolio page now covers the game: let the music fall quiet
+    const gameHiddenListener = () => {
+      this.offscreen = true;
+      this.updateMusic();
+    };
+    EventBus.on('game-hidden', gameHiddenListener);
+
+    // Same when the browser tab is hidden (Phaser sleeps the game loop, but
+    // the AudioContext would keep playing)
+    const onTabHidden = () => { this.tabHidden = true; this.updateMusic(); };
+    const onTabVisible = () => { this.tabHidden = false; this.updateMusic(); };
+    this.game.events.on(Phaser.Core.Events.HIDDEN, onTabHidden);
+    this.game.events.on(Phaser.Core.Events.VISIBLE, onTabVisible);
+
+    // Listen for mute toggle from React controls (mutes music and sounds; the
+    // initial value is the player's remembered choice, as App.jsx shows it)
     EventBus.clear('toggle-mute');
-    this.isMuted = false;
+    this.isMuted = loadMuted();
     const muteListener = (muted) => {
       this.isMuted = muted;
+      this.updateMusic();
     };
     EventBus.on('toggle-mute', muteListener);
 
@@ -395,7 +437,13 @@ export default class MainScene extends Phaser.Scene {
       window.removeEventListener('pointerdown', audioInitHandler);
       EventBus.off('close-modal', closeModalListener);
       EventBus.off('game-resumed', gameResumedListener);
+      EventBus.off('game-hidden', gameHiddenListener);
       EventBus.off('toggle-mute', muteListener);
+      this.game.events.off(Phaser.Core.Events.HIDDEN, onTabHidden);
+      this.game.events.off(Phaser.Core.Events.VISIBLE, onTabVisible);
+      // Without this a restarted scene (e.g. on hot reload) would play over the old music
+      this.musicSource?.stop();
+      this.audioCtx?.close();
     };
 
     this.events.once('shutdown', cleanup);
@@ -474,7 +522,50 @@ export default class MainScene extends Phaser.Scene {
   initAudio() {
     if (!this.audioCtx) {
       this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Music runs through its own gain so it can fade without touching SFX
+      this.musicGain = this.audioCtx.createGain();
+      this.musicGain.gain.value = 0;
+      this.musicGain.connect(this.audioCtx.destination);
+      this.musicBuffer = this.musicData
+        .then((data) => data && this.audioCtx.decodeAudioData(data))
+        .catch(() => null);
+      this.startMusic();
     }
+  }
+
+  /** Start the looping track once there's a context, a decoded track and a dismissed title. */
+  startMusic() {
+    if (!this.musicOn || !this.audioCtx || this.musicSource) return;
+    this.musicBuffer.then((buffer) => {
+      if (!buffer || this.musicSource) return;
+      const source = this.audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      // Exactly one 40s loop, ending where the decoded audio ends (see MUSIC)
+      source.loopEnd = buffer.duration;
+      source.loopStart = Math.max(0, buffer.duration - MUSIC.loopLength);
+      source.connect(this.musicGain);
+      source.start();
+      this.musicSource = source;
+      this.updateMusic();
+    });
+  }
+
+  /** Fade the music toward whatever it should be now: on, or silent while muted, covered or in a hidden tab. */
+  updateMusic() {
+    if (!this.musicGain) return;
+    const audible = this.musicOn && !this.isMuted && !this.offscreen && !this.tabHidden;
+    if (audible && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+
+    const now = this.audioCtx.currentTime;
+    const gain = this.musicGain.gain;
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.value, now);
+    gain.linearRampToValueAtTime(
+      audible ? MUSIC.volume : 0,
+      now + (audible ? MUSIC.fadeIn : MUSIC.fadeOut)
+    );
   }
 
   playSynthSound(type) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import GameContainer from './game/GameContainer';
 import { EventBus } from './game/EventBus';
+import { loadMuted, saveMuted } from './game/audioPrefs';
 
 // Pages
 import AboutPage from './pages/AboutPage';
@@ -15,12 +16,14 @@ import CinematicHUD from './components/CinematicHUD';
 
 // ── Persistent Game Layer ─────────────────────────────────────────────────────
 function PersistentGame({ isVisible }) {
-  const [isMuted, setIsMuted] = useState(false);
+  // Mutes music and sound effects; remembered across visits
+  const [isMuted, setIsMuted] = useState(loadMuted);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
       const next = !prev;
       EventBus.emit('toggle-mute', next);
+      saveMuted(next);
       return next;
     });
   }, []);
