@@ -63,7 +63,9 @@ export default function GameContainer({ isMuted, toggleMute }) {
           <button
             onClick={toggleMute}
             className="p-2 retro-btn bg-[#282828] hover:bg-[#383838] text-white flex items-center justify-center cursor-pointer"
-            title={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+            title={isMuted ? 'Unmute music and sounds' : 'Mute music and sounds'}
+            aria-label="Mute music and sounds"
+            aria-pressed={isMuted}
           >
             {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
