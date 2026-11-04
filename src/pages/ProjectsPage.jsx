@@ -209,7 +209,7 @@ const projects = [
       'Unlimited undo & instant restart',
       '10 rooms, one exact solution each',
     ],
-    achievement: 'Ranked #43 overall of 238 entries in the Bezi Mega Jam 2026, from 23 ratings. Made solo.',
+    achievement: 'Ranked #43 overall of 207 ranked entries in the Bezi Mega Jam 2026, from 23 ratings. Made solo.',
     ranks: [
       ['Overall', 43],
       ['Scope & Completion', 25],
@@ -257,7 +257,7 @@ const projects = [
       'UI game over flow',
       'Fast arcade gameplay loop',
     ],
-    achievement: 'Ranked #228 overall and #120 in Enjoyment among 523 entries.',
+    achievement: 'Ranked #228 overall and #120 in Enjoyment among 517 ranked entries.',
     links: [
       { label: 'GitHub', href: 'https://github.com/whenommmm/PongPing' },
       { label: 'Play Demo', href: 'https://whenommm.itch.io/pongping' },
@@ -351,7 +351,7 @@ export default function ProjectsPage() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FFB84D]" />
             </span>
             <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/70">
-              Vansh Srivastava · Game Developer
+              Vansh Srivastava · Game Designer
             </span>
           </div>
 

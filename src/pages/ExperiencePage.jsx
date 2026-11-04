@@ -1,281 +1,145 @@
+import { ArrowUpRight, Award, Play, Trophy } from 'lucide-react';
+import { CinematicAtmosphere } from '../components/shared/CinematicAtmosphere';
+import { Reveal } from '../components/shared/Reveal';
 import { ReturnToWorld } from '../components/shared/ReturnToWorld';
-// ── Experience data ───────────────────────────────────────────────────────────
-const experiences = [
+
+// ── Experience data (newest first) ────────────────────────────────────────────
+const ENTRIES = [
   {
-    index: '01',
-    company: 'Subatomic Forge Studios',
-    role: 'Beta Tester',
-    date: 'September 2025',
+    kind: 'Game Jam',
+    date: 'Sep 2026',
+    title: 'Bezi Mega Jam 2026',
+    role: 'Solo entry, made in Unity',
+    subject: 'Monsters Inc.',
     description:
-      'Worked with the studio to help improve the user experience of the game "The Space Between" — playing through active builds, surfacing friction, and shaping how the game felt in players\' hands.',
+      'The theme was Genre Collision: smash two genres together and make them work. I crossed a turn-based block-pushing puzzle with tower defense. You protect your bed by crushing monsters with blocks, or by pushing blocks onto outlets that zap anything nearby.',
     highlights: [
-      'Reported gameplay bugs across active testing phases',
-      'Identified usability concerns and player friction points',
-      'Provided balancing feedback during live iterations',
-      'Mentioned in the credits of the game',
+      'Ten rooms, each with exactly one solution',
+      'The whole monster schedule is shown up front, so players can plan every move',
+      'Unlimited undo and instant restart, so trying an idea costs nothing',
     ],
-    accent: 'amber',
-    meta: 'GAME STUDIO • PLAYTEST',
+    result: { icon: Trophy, text: 'Ranked #43 overall of 207 ranked entries, and #25 for Scope & Completion.' },
+    links: [
+      { label: 'Play', href: 'https://whenommm.itch.io/monsters-inc', icon: Play },
+      { label: 'Jam Results', href: 'https://itch.io/jam/bezi-mega-jam-1/rate/5068009', icon: Trophy },
+    ],
   },
   {
-    index: '02',
-    company: 'VeritusAI',
-    role: 'Business Development Intern',
-    date: 'November 2025 – January 2026',
-    location: 'Osaka, Japan — Remote',
+    kind: 'Game Jam',
+    date: 'Mar 2026',
+    title: 'Bad Ideas Game Jam 2026',
+    role: 'Solo entry, made in Unity',
+    subject: 'PongPing',
     description:
-      'Worked on professor outreach and onboarding for academic researchers and IIT professors — leading the top of funnel for an AI research platform\'s earliest adopters.',
+      'The theme was Outside the Box, so I turned one of the first video games inside out: in PongPing you play as the ball, not the paddles.',
     highlights: [
-      'Led cold messaging campaigns to academic researchers',
-      'Personalized communication for professor onboarding',
-      'Identified and qualified high-intent potential users',
-      'Supported early adoption and outreach strategy',
+      'Difficulty ramps up the longer you survive',
+      'Blocks spawn procedurally, so every run plays differently',
+      'Fast arcade runs that last a few seconds each',
     ],
-    accent: 'cyan',
-    meta: 'AI • RESEARCH OUTREACH',
+    result: { icon: Trophy, text: 'Ranked #120 for Enjoyment and #228 overall, of 517 ranked entries.' },
+    links: [
+      { label: 'Play', href: 'https://whenommm.itch.io/pongping', icon: Play },
+      { label: 'Jam Results', href: 'https://itch.io/jam/bad-ideas-game-jam-2026/rate/4326710', icon: Trophy },
+    ],
+  },
+  {
+    kind: 'Internship',
+    date: 'Nov 2025 – Jan 2026',
+    title: 'VeritusAI',
+    role: 'Business Development Intern',
+    subject: 'Osaka, Japan (remote)',
+    description:
+      "Led outreach and onboarding for an AI research platform's first users: academic researchers and IIT professors.",
+    highlights: [
+      'Ran cold messaging campaigns to academic researchers',
+      'Wrote personalized messages to onboard each professor',
+      'Found and qualified high-intent users',
+    ],
+  },
+  {
+    kind: 'Studio',
+    date: 'Sep 2025',
+    title: 'Subatomic Forge Studios',
+    role: 'Beta Tester',
+    subject: 'The Space Between',
+    description:
+      'Playtested active builds of The Space Between with the studio, finding where players struggled and giving feedback on how the game felt to play.',
+    highlights: [
+      'Spotted usability problems and points of player friction',
+      'Gave balancing feedback during live iterations',
+      'Reported gameplay bugs across testing phases',
+    ],
+    result: { icon: Award, text: "Named in the game's credits." },
   },
 ];
 
-// ── Background FX ─────────────────────────────────────────────────────────────
-const STAR_DOTS = Array.from({ length: 28 }, (_, i) => {
-  const sx = (i * 9301 + 49297) % 233280;
-  const sy = (i * 4096 + 12345) % 233280;
-  return {
-    i,
-    x: (sx / 233280) * 100,
-    y: (sy / 233280) * 100,
-    size: 1 + ((i * 7) % 3) * 0.5,
-    dur: 5 + (i % 7),
-    delay: (i % 9) * 0.65,
-  };
-});
-
-function BackgroundFX() {
-  const dots = Array.from({ length: 18 });
+// ── Timeline entry ────────────────────────────────────────────────────────────
+function Entry({ kind, date, title, role, subject, description, highlights, result, links }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#060816_0%,#0B1020_55%,#060816_100%)]" />
+    <div className="group relative pl-10">
+      {/* Dot on the timeline, level with the tab */}
+      <div className="absolute left-2 top-[12px] h-2 w-2 -translate-x-1/2 rounded-full bg-primary ring-4 ring-background transition-all duration-300 group-hover:shadow-glow" />
 
-      {/* Fine 64px futuristic grid — matches Resume/Contact */}
-      <div
-        className="absolute inset-0 opacity-[0.055]"
-        style={{
-          backgroundImage:
-            'linear-gradient(oklch(0.88 0.04 230) 1px, transparent 1px), linear-gradient(90deg, oklch(0.88 0.04 230) 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
-          maskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 80%)',
-        }}
-      />
-
-      {/* Animated 80px grid pan — existing, preserved */}
-      <div className="absolute inset-0 bg-grid-cinematic animate-grid-pan opacity-40" />
-
-      <div
-        className="absolute -top-40 left-1/2 h-[640px] w-[640px] -translate-x-1/2 rounded-full blur-3xl animate-ambient-pulse"
-        style={{ background: 'var(--gradient-amber)' }}
-      />
-      <div
-        className="absolute bottom-0 right-[-10%] h-[520px] w-[520px] rounded-full blur-3xl animate-ambient-pulse"
-        style={{ background: 'var(--gradient-cyan)', animationDelay: '-4s' }}
-      />
-
-      {/* Twinkling star particles — matches Resume/Contact */}
-      <div className="absolute inset-0">
-        {STAR_DOTS.map((p) => (
-          <span
-            key={p.i}
-            className="absolute rounded-full animate-twinkle"
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
-              background: 'oklch(0.96 0.02 85)',
-              boxShadow: '0 0 6px oklch(0.82 0.16 65 / 0.5)',
-              animationDuration: `${p.dur}s`,
-              animationDelay: `${p.delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Float-slow dots — existing, preserved */}
-      <div className="absolute inset-0">
-        {dots.map((_, i) => {
-          const top = (i * 53) % 100;
-          const left = (i * 37 + 11) % 100;
-          const size = (i % 3) + 1.5;
-          const delay = (i % 7) * -1.3;
-          return (
-            <span
-              key={i}
-              className="absolute rounded-full bg-white/40 animate-float-slow"
-              style={{
-                top: `${top}%`,
-                left: `${left}%`,
-                width: size,
-                height: size,
-                animationDelay: `${delay}s`,
-                boxShadow: '0 0 8px oklch(1 0 0 / 0.6)',
-                opacity: 0.5,
-              }}
-            />
-          );
-        })}
-      </div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,#060816_90%)]" />
-    </div>
-  );
-}
-
-// ── Experience Card ───────────────────────────────────────────────────────────
-function ExperienceCard({ exp, reverse }) {
-  const isAmber = exp.accent === 'amber';
-  return (
-    <div
-      className={`relative grid items-center gap-10 animate-fade-in-up md:grid-cols-2 md:gap-16 ${
-        reverse ? 'md:[&>*:first-child]:order-2' : ''
-      }`}
-    >
-      {/* Meta column */}
-      <aside className="relative">
-        <div className="relative">
-          <div
-            className="absolute -inset-10 -z-10 rounded-full blur-3xl opacity-70"
-            style={{
-              background: isAmber
-                ? 'radial-gradient(circle, var(--color-amber-glow) 0%, transparent 65%)'
-                : 'radial-gradient(circle, var(--color-cyan-glow) 0%, transparent 65%)',
-              opacity: 0.35,
-            }}
-          />
-          <div className="text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
-            {exp.meta}
-          </div>
-          <div
-            className="mt-3 text-[120px] font-semibold leading-none tracking-tighter text-transparent md:text-[160px]"
-            style={{
-              WebkitTextStroke: `1px ${
-                isAmber ? 'oklch(0.82 0.16 65 / 0.55)' : 'oklch(0.68 0.16 245 / 0.55)'
-              }`,
-            }}
-          >
-            {exp.index}
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <span
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
-                isAmber ? 'border-amber-glow/30 text-amber-glow' : 'border-cyan-glow/30 text-cyan-glow'
-              }`}
-              style={{
-                background: isAmber
-                  ? 'oklch(0.82 0.16 65 / 0.08)'
-                  : 'oklch(0.68 0.16 245 / 0.08)',
-              }}
-            >
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{
-                  background: isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)',
-                  boxShadow: `0 0 10px ${isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)'}`,
-                }}
-              />
-              {exp.date}
-            </span>
-            {exp.location && <span className="text-foreground/60">{exp.location}</span>}
-          </div>
-        </div>
-      </aside>
-
-      {/* Card */}
-      <article
-        className="group relative glass-card rounded-3xl p-8 transition-all duration-500 hover:-translate-y-1 md:p-10"
-        style={{
-          boxShadow: isAmber
-            ? 'var(--shadow-card), var(--shadow-amber-local)'
-            : 'var(--shadow-card), var(--shadow-cyan-local)',
-        }}
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl transition-opacity duration-700 group-hover:opacity-100"
-          style={{
-            background: isAmber
-              ? 'radial-gradient(circle, var(--color-amber-glow) 0%, transparent 70%)'
-              : 'radial-gradient(circle, var(--color-cyan-glow) 0%, transparent 70%)',
-            opacity: 0.35,
-          }}
-        />
-
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            {exp.role}
-          </span>
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{
-              background: isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)',
-              boxShadow: `0 0 14px ${isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)'}`,
-            }}
-          />
+      <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+        {/* The entry's kind, as a folder tab on top of the card */}
+        <div className="relative -mb-px inline-block rounded-t-lg border border-b-0 border-primary bg-primary px-4 pt-2 pb-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary-foreground">
+          {kind}
         </div>
 
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-          <span className="text-gradient-hero">{exp.company}</span>
-        </h2>
+        <article className="glass rounded-2xl rounded-tl-none p-6 transition-colors duration-300 group-hover:border-foreground/20 sm:p-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
+            <span className="whitespace-nowrap text-xs text-muted-foreground">{date}</span>
+          </div>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {role} <span className="text-muted-foreground/50">·</span>{' '}
+            <span className="text-foreground/90">{subject}</span>
+          </p>
 
-        <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground md:text-base">
-          {exp.description}
-        </p>
+          <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">{description}</p>
 
-        <div className="my-7 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <ul className="mt-5 space-y-2.5">
+            {highlights.map((h) => (
+              <li key={h} className="flex items-start gap-3 text-sm leading-relaxed text-foreground/85 sm:text-[15px]">
+                <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 bg-primary" />
+                {h}
+              </li>
+            ))}
+          </ul>
 
-        <ul className="space-y-3.5">
-          {exp.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-3 text-sm leading-relaxed text-foreground/85 md:text-[15px]">
-              <span
-                className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{
-                  background: isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)',
-                  boxShadow: `0 0 8px ${isAmber ? 'var(--color-amber-glow)' : 'var(--color-cyan-glow)'}`,
-                }}
-              />
-              {h}
-            </li>
-          ))}
-        </ul>
+          {result && (
+            <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] px-4 py-3 text-sm">
+              <result.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="text-pretty text-foreground/90">{result.text}</span>
+            </div>
+          )}
 
-        <div
-          className="mt-9 h-px w-full opacity-50"
-          style={{
-            background: isAmber
-              ? 'linear-gradient(90deg, transparent, var(--color-amber-glow), transparent)'
-              : 'linear-gradient(90deg, transparent, var(--color-cyan-glow), transparent)',
-          }}
-        />
-      </article>
-    </div>
-  );
-}
-
-// ── Closing ───────────────────────────────────────────────────────────────────
-function Closing() {
-  return (
-    <section className="relative mx-auto max-w-3xl px-6 pb-24 text-center">
-      <div className="glass-card mx-auto rounded-3xl p-10 md:p-14">
-        <div className="mx-auto mb-6 h-px w-24 bg-gradient-to-r from-transparent via-amber-glow/70 to-transparent" />
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
-          The Journey Continues
-        </p>
-        <h3 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-          <span className="text-gradient-hero">Always shipping, always learning.</span>
-        </h3>
-        <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
-          Every project, playtest, and conversation adds another layer.
-          The next chapter is already in motion.
-        </p>
+          {links && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {links.map(({ label, href, icon: Icon }, i) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={
+                    i === 0
+                      ? 'group/btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-primary-foreground transition-all hover:scale-[1.03]'
+                      : 'group/btn inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/90 transition-all hover:border-white/30 hover:bg-white/[0.08]'
+                  }
+                  style={i === 0 ? { backgroundImage: 'var(--gradient-primary)' } : undefined}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                  <ArrowUpRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                </a>
+              ))}
+            </div>
+          )}
+        </article>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -283,14 +147,14 @@ function Closing() {
 export default function ExperiencePage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <BackgroundFX />
+      <CinematicAtmosphere />
 
       <main className="relative z-10">
         {/* Hero */}
-        <section className="relative mx-auto max-w-5xl px-6 pt-20 pb-24 text-center md:pt-28 md:pb-32">
+        <section className="relative mx-auto max-w-5xl px-6 pt-20 pb-16 text-center md:pt-28 md:pb-20">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-glow shadow-[0_0_10px_var(--color-amber-glow)]" />
-            Career Path • Experience
+            <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
+            Quest Log • Experience
           </div>
 
           <h1
@@ -301,30 +165,27 @@ export default function ExperiencePage() {
           </h1>
 
           <p
-            className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg animate-fade-in-up"
+            className="mx-auto mt-7 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg animate-fade-in-up"
             style={{ animationDelay: '0.2s' }}
           >
-            Building experience through creative technology, gameplay systems,
-            collaboration, and experimentation.
+            Designing games against the clock, and helping studios make theirs better.
           </p>
 
           <div
-            className="mx-auto mt-12 h-px w-40 bg-gradient-to-r from-transparent via-amber-glow/60 to-transparent animate-fade-in-up"
+            className="mx-auto mt-12 h-px w-40 bg-gradient-to-r from-transparent via-primary/60 to-transparent animate-fade-in-up"
             style={{ animationDelay: '0.3s' }}
           />
         </section>
 
-        {/* Showcase */}
-        <section className="relative mx-auto max-w-6xl px-6 pb-32">
-          <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/10 to-transparent md:block" />
-          <div className="flex flex-col gap-24 md:gap-32">
-            {experiences.map((exp, i) => (
-              <ExperienceCard key={exp.company} exp={exp} reverse={i % 2 === 1} />
-            ))}
-          </div>
+        {/* Timeline */}
+        <section className="relative mx-auto max-w-3xl px-6 pb-24">
+          <div className="absolute left-8 top-4 bottom-32 w-px bg-gradient-to-b from-primary/50 via-white/10 to-transparent" />
+          {ENTRIES.map((entry, i) => (
+            <Reveal key={entry.title} delay={i === 0 ? 350 : 80} className="mb-6 last:mb-0">
+              <Entry {...entry} />
+            </Reveal>
+          ))}
         </section>
-
-        <Closing />
       </main>
 
       <ReturnToWorld />

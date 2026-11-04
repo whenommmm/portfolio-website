@@ -2,7 +2,6 @@ import { Reveal } from '../components/shared/Reveal';
 import { CinematicAtmosphere } from '../components/shared/CinematicAtmosphere';
 import { ReturnToWorld } from '../components/shared/ReturnToWorld';
 
-
 function SectionDivider() {
   return (
     <div className="relative mx-auto my-2 h-px w-full max-w-5xl px-6">
@@ -54,9 +53,9 @@ function Hero() {
           className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg animate-rise"
           style={{ animationDelay: '0.3s' }}
         >
-          Computer science student &amp; aspiring game developer. I build
-          interactive experiences, tinker with gameplay systems, and live at the
-          intersection of code, design, and creative tech.
+          Computer science student &amp; game designer. I come up with the
+          mechanics, puzzles and twists, then playtest and tune them until the
+          game feels right.
         </p>
 
         <div
@@ -65,10 +64,10 @@ function Hero() {
         >
           <a
             href="#about"
-            className="group relative inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-glow transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_70px_-10px_oklch(0.82_0.14_75/0.5)]"
+            className="group relative inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-glow transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_70px_-10px_color-mix(in_oklab,var(--primary)_50%,transparent)]"
             style={{ backgroundImage: 'var(--gradient-primary)' }}
           >
-            Enter world
+            Continue
             <span className="font-pixel animate-blink">▸</span>
           </a>
         </div>
@@ -96,23 +95,26 @@ function About() {
         </Reveal>
         <Reveal delay={80}>
           <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
-            I build worlds you can <span className="text-gradient">play with</span>.
+            I design worlds you can <span className="text-gradient">play with</span>.
           </h2>
         </Reveal>
         <Reveal delay={160}>
-          <div className="mt-8 space-y-5 text-lg leading-relaxed text-muted-foreground">
+          <div className="mt-8 space-y-5 text-pretty text-lg leading-relaxed text-muted-foreground">
             <p>
-              I'm drawn to the kind of software that reacts — interfaces that feel
-              alive, mechanics that surprise you, and small interactions that make
-              you smile. Most of my time is spent prototyping gameplay systems and
-              seeing what happens when you push them a little too far.
+              Every game I make starts with the player: what should they feel,
+              and what should they do to get there? I design toward that answer,
+              from the core mechanic and the rules to the levels and the ending,
+              then play it over and over, tuning until the game gets there on
+              its own.
             </p>
             <p>
-              I love sitting between disciplines: writing code that's careful and
-              considered, but never losing sight of how something <em>feels</em>.
-              Whether it's a tiny game loop, a frontend experiment, or a creative
-              tool, I'm chasing the same thing — moments that turn passive users
-              into curious players.
+              AI writes most of my code, which frees me to focus on what makes a
+              game: what you're asked to do, how hard it gets, and how it{' '}
+              <em>feels</em>. That's how I made <span className="text-foreground">Later</span>{' '}
+              overnight, a <span className="whitespace-nowrap">20-second</span> dodge game whose last
+              seconds change what you've been doing. Moments like that, when a
+              game makes you rethink everything you just did, are what I keep
+              chasing.
             </p>
           </div>
         </Reveal>
@@ -125,7 +127,7 @@ function About() {
 const EDUCATION = [
   {
     school: 'Scaler School of Technology',
-    degree: 'Bachelor of Sciences in CS by BITS Pilani',
+    degree: 'Bachelor of Science in Computer Science, BITS Pilani',
     period: 'Aug 2024 – Aug 2027',
     place: 'Bengaluru, India',
   },
@@ -139,7 +141,7 @@ const EDUCATION = [
 
 function Education() {
   return (
-    <section id="resume" className="relative px-6 py-24 sm:py-28">
+    <section id="education" className="relative px-6 py-24 sm:py-28">
       <div className="mx-auto max-w-3xl">
         <Reveal>
           <SectionLabel>02 — Education</SectionLabel>
@@ -153,8 +155,8 @@ function Education() {
         <div className="relative mt-12">
           <div className="absolute left-2 top-8 bottom-8 w-px bg-border" />
           {EDUCATION.map((e, i) => (
-            <Reveal key={e.school} delay={120 + i * 120}>
-              <div className="group relative mb-5 pl-10 last:mb-0">
+            <Reveal key={e.school} delay={120 + i * 120} className="mb-5 last:mb-0">
+              <div className="group relative pl-10">
                 <div className="absolute left-2 top-[30px] h-2 w-2 -translate-x-1/2 rounded-full bg-primary ring-4 ring-background transition-all duration-300 group-hover:shadow-glow" />
                 <div className="glass rounded-xl p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/20 sm:p-7">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -178,25 +180,25 @@ function Education() {
 // ── Tech Stack ────────────────────────────────────────────────────────────────
 const GROUPS = [
   {
-    title: 'Languages',
-    color: 'primary',
-    items: ['Java', 'C#', 'Python', 'HTML/CSS', 'MySQL', 'React', 'Spring Boot'],
-  },
-  {
     title: 'Game Engines',
-    color: 'accent',
+    color: 'primary',
     items: ['Unity', 'Unreal Engine', 'GDevelop'],
   },
   {
-    title: 'Developer Tools',
-    color: 'secondary',
-    items: ['Git', 'GitHub', 'VSCode', 'Canva', 'GitHub Pages', 'Itch.io'],
+    title: 'Languages & Frameworks',
+    color: 'accent',
+    items: ['C#', 'Java', 'Python', 'HTML/CSS', 'React', 'Spring Boot', 'MySQL'],
+  },
+  {
+    title: 'Tools',
+    color: 'muted-foreground',
+    items: ['Git', 'GitHub', 'VS Code', 'Photopea', 'Canva', 'itch.io', 'GitHub Pages'],
   },
 ];
 
 function TechStack() {
   return (
-    <section id="experience" className="relative px-6 py-24 sm:py-28">
+    <section id="tech-stack" className="relative px-6 py-24 sm:py-28">
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <SectionLabel>03 — Tech Stack</SectionLabel>
@@ -208,8 +210,8 @@ function TechStack() {
         </Reveal>
         <Reveal delay={160}>
           <p className="mt-4 max-w-xl text-muted-foreground">
-            A mix of engines, languages, and tools I reach for when building
-            gameplay, prototypes, and interfaces.
+            The engines, languages and tools I use to turn a design into
+            something you can play.
           </p>
         </Reveal>
 
