@@ -448,18 +448,13 @@
 }
 /* Title screen — press-key text amber glow breathe */
 @keyframes press-key-breathe {
-  0%, 100% { opacity: 1;    text-shadow: 0 0 12px oklch(0.82 0.16 65 / 0.5); }
-  50%      { opacity: 0.25; text-shadow: 0 0 4px  oklch(0.82 0.16 65 / 0.1); }
+  0%, 100% { opacity: 1;    transform: translateX(0); }
+  50%      { opacity: 0.65; transform: translateX(3px); }
 }
 /* Title screen — full overlay fade out on dismiss */
 @keyframes title-fade-out {
   from { opacity: 1; }
   to   { opacity: 0; pointer-events: none; }
-}
-/* Title screen — scanline drift */
-@keyframes scanline-drift {
-  from { background-position: 0 0; }
-  to   { background-position: 0 100%; }
 }
 /* Title screen — main title letter-by-letter rise */
 @keyframes title-rise {
