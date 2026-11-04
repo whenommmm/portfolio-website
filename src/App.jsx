@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import GameContainer from './game/GameContainer';
 import { EventBus } from './game/EventBus';
@@ -55,21 +55,37 @@ function PersistentGame({ isVisible }) {
   );
 }
 
-// ── Cinematic Title Screen ────────────────────────────────────────────────────
+// ── Title Screen ──────────────────────────────────────────────────────────────
 //
-// Full-screen game boot experience shown once on first visit.
-// Pressing Enter (or clicking anywhere) dismisses it with a fade,
-// then the tutorial WelcomeModal appears.
-//
-// Scanline star particles — deterministic, so computed once at module load
-// (reading a ref during render trips react-hooks/refs and buys nothing here).
-const TITLE_PARTICLES = Array.from({ length: 40 }, (_, i) => ({
-  x: ((i * 9301 + 49297) % 233280) / 233280 * 100,
-  y: ((i * 4096 + 12345) % 233280) / 233280 * 100,
-  size: 1 + (i % 3) * 0.5,
-  dur:  4 + (i % 6),
-  del:  (i % 8) * 0.5,
-}));
+// Shown over the game on the first visit, laid out like an indie game's
+// poster: the name huge in moonlight silver, a pixel crescent moon, and credits
+// in the bottom corners. Enter, Space or a click fades it out and the game
+// starts.
+
+// The same moonlight gradient as the Contact page title
+const MOONLIGHT = 'linear-gradient(135deg, oklch(0.97 0.005 250) 0%, oklch(0.80 0.03 250) 50%, oklch(0.60 0.035 255) 100%)';
+const SILVER = '#c9d1e0';
+const PALE = '#eef1f7';
+
+// Square pixel stars: [top %, left %, size px, colour, opacity]
+const TITLE_STARS = [
+  [8, 14, 4, PALE, 0.7], [18, 32, 6, SILVER, 0.8], [11, 58, 4, PALE, 0.4], [26, 72, 4, PALE, 0.6],
+  [6, 68, 4, SILVER, 0.9], [24, 72, 6, PALE, 0.75], [34, 86, 4, PALE, 0.5], [42, 78, 4, SILVER, 0.6],
+  [14, 92, 4, PALE, 0.4], [52, 4, 4, PALE, 0.3], [64, 48, 6, SILVER, 0.5], [78, 28, 4, PALE, 0.4],
+  [85, 55, 4, PALE, 0.5], [68, 64, 4, SILVER, 0.7], [92, 56, 4, PALE, 0.3],
+];
+// Plus-shaped sparkles: [top %, left %, colour, opacity]
+const TITLE_SPARKLES = [[22, 45, PALE, 0.75], [48, 89, SILVER, 0.8]];
+
+// Pixel crescent moon on a 16×16 grid: cream body, soft yellow shading, gold flecks.
+// Each rect is [x, y, width, height = 1].
+const MOON = [
+  ['#fff4cc', [[6, 1, 3], [4, 2, 5], [3, 3, 5], [2, 4, 5], [2, 5, 4], [1, 6, 4], [1, 7, 4],
+               [1, 8, 4], [1, 9, 4], [2, 10, 4], [2, 11, 5], [3, 12, 5], [4, 13, 5], [6, 14, 3]]],
+  ['#f2d98f', [[5, 3, 2], [4, 4, 2], [3, 5, 2], [2, 6, 2], [2, 7, 2], [2, 8, 2], [2, 9, 2],
+               [3, 10, 2], [4, 11, 2], [5, 12, 2]]],
+  ['#dcb862', [[2, 7, 1, 2], [3, 4, 1], [3, 11, 1]]],
+];
 
 function TitleScreen({ onDismiss }) {
   const [fading, setFading] = useState(false);
@@ -89,362 +105,83 @@ function TitleScreen({ onDismiss }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [dismiss]);
 
-  const particles = TITLE_PARTICLES;
+  const nameLine = { backgroundImage: MOONLIGHT, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
   return (
     <div
       onClick={dismiss}
+      className="fixed inset-0 z-[200] flex cursor-default select-none flex-col justify-between overflow-hidden"
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 200,
-        cursor: 'default',
+        background: 'radial-gradient(circle at 85% 15%, #0e1538 0%, #060a1e 50%, #030612 100%)',
         animation: fading ? 'title-fade-out 0.6s ease-in forwards' : undefined,
       }}
     >
-      {/* ── 1. Deep navy base ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(160deg, oklch(0.08 0.04 270) 0%, oklch(0.11 0.04 265) 50%, oklch(0.07 0.03 268) 100%)',
-        }}
-      />
-
-      {/* ── 2. Fine grid overlay ──────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage:
-            'linear-gradient(oklch(0.88 0.04 230) 1px, transparent 1px), linear-gradient(90deg, oklch(0.88 0.04 230) 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
-          opacity: 0.05,
-          maskImage: 'radial-gradient(ellipse 80% 60% at 50% 50%, black 10%, transparent 75%)',
-        }}
-      />
-
-      {/* ── 3. Scanline texture ───────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, oklch(0 0 0 / 0.08) 3px, oklch(0 0 0 / 0.08) 4px)',
-          animation: 'scanline-drift 8s linear infinite',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* ── 4. Amber crown glow ───────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '800px',
-          height: '600px',
-          borderRadius: '50%',
-          background: 'radial-gradient(closest-side, oklch(0.82 0.16 65 / 0.18), transparent)',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* ── 5. Star particles ─────────────────────────────────────────────── */}
-      {particles.map((p, i) => (
-        <span
-          key={i}
-          style={{
-            position: 'absolute',
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            borderRadius: '50%',
-            background: 'oklch(0.96 0.02 85)',
-            boxShadow: '0 0 5px oklch(0.82 0.16 65 / 0.6)',
-            animation: `twinkle ${p.dur}s ${p.del}s ease-in-out infinite`,
-          }}
-        />
-      ))}
-
-      {/* ── 6. HUD corner accents ─────────────────────────────────────────── */}
-      {/* Top-left */}
-      <div style={{ position: 'absolute', top: 24, left: 28, pointerEvents: 'none' }}>
-        <div style={{ width: 28, height: 28, borderTop: '1px solid oklch(0.82 0.16 65 / 0.35)', borderLeft: '1px solid oklch(0.82 0.16 65 / 0.35)' }} />
-      </div>
-      {/* Top-right */}
-      <div style={{ position: 'absolute', top: 24, right: 28, pointerEvents: 'none' }}>
-        <div style={{ width: 28, height: 28, borderTop: '1px solid oklch(0.82 0.16 65 / 0.35)', borderRight: '1px solid oklch(0.82 0.16 65 / 0.35)' }} />
-      </div>
-      {/* Bottom-left */}
-      <div style={{ position: 'absolute', bottom: 24, left: 28, pointerEvents: 'none' }}>
-        <div style={{ width: 28, height: 28, borderBottom: '1px solid oklch(0.82 0.16 65 / 0.35)', borderLeft: '1px solid oklch(0.82 0.16 65 / 0.35)' }} />
-      </div>
-      {/* Bottom-right */}
-      <div style={{ position: 'absolute', bottom: 24, right: 28, pointerEvents: 'none' }}>
-        <div style={{ width: 28, height: 28, borderBottom: '1px solid oklch(0.82 0.16 65 / 0.35)', borderRight: '1px solid oklch(0.82 0.16 65 / 0.35)' }} />
-      </div>
-
-      {/* ── 7. Main content — upper zone ──────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 24px 180px',   // bottom padding reserves room for lower panel
-          textAlign: 'center',
-          userSelect: 'none',
-          pointerEvents: 'none',
-        }}
-      >
-        {/* System tag */}
-        <div
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '9px',
-            letterSpacing: '0.38em',
-            color: 'oklch(0.82 0.16 65 / 0.45)',
-            textTransform: 'uppercase',
-            marginBottom: '28px',
-            animation: 'title-rise 1s 0.2s ease-out both',
-          }}
-        >
-          PORTFOLIO OS v1.0 · 2026
-        </div>
-
-        {/* Main title */}
-        <h1
-          style={{
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize: 'clamp(20px, 3.8vw, 42px)',
-            fontWeight: 700,
-            lineHeight: 1.35,
-            letterSpacing: '0.04em',
-            color: 'oklch(0.95 0.01 80)',
-            textShadow: '0 0 40px oklch(0.82 0.16 65 / 0.35), 0 2px 0 oklch(0.30 0.08 268)',
-            margin: 0,
-            animation: 'title-rise 1s 0.4s ease-out both',
-          }}
-        >
-          VANSH
-          <br />
-          SRIVASTAVA
-        </h1>
-
-        {/* Subtitle flanked by amber rules */}
-        <div
-          style={{
-            marginTop: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
-            animation: 'title-rise 1s 0.6s ease-out both',
-          }}
-        >
-          <div style={{ height: '1px', width: '36px', background: 'oklch(0.82 0.16 65 / 0.28)' }} />
+      {/* Stars */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        {TITLE_STARS.map(([top, left, size, color, opacity]) => (
           <span
-            style={{
-              fontFamily: 'monospace',
-              fontSize: '10px',
-              letterSpacing: '0.32em',
-              color: 'oklch(0.75 0.01 240 / 0.55)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Game Designer · Interactive Portfolio
-          </span>
-          <div style={{ height: '1px', width: '36px', background: 'oklch(0.82 0.16 65 / 0.28)' }} />
-        </div>
-
-        {/* Press Enter prompt */}
-        <div
-          style={{
-            marginTop: '52px',
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize: 'clamp(9px, 1.3vw, 12px)',
-            letterSpacing: '0.18em',
-            color: 'oklch(0.88 0.14 72)',
-            textTransform: 'uppercase',
-            animation: 'press-key-breathe 1.8s 1.2s ease-in-out infinite, title-rise 1s 0.85s ease-out both',
-          }}
-        >
-          Press Enter to Play
-        </div>
-
-        {/* Click fallback hint */}
-        <div
-          style={{
-            marginTop: '12px',
-            fontFamily: 'monospace',
-            fontSize: '8px',
-            letterSpacing: '0.25em',
-            color: 'oklch(0.97 0.005 240 / 0.18)',
-            textTransform: 'uppercase',
-            animation: 'title-rise 1s 1.05s ease-out both',
-          }}
-        >
-          or click anywhere
-        </div>
-      </div>
-
-      {/* ── 8. Lower intel panel ──────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          paddingBottom: '28px',
-          gap: 0,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        {/* Tagline — personality line from old popup, now cinematic */}
-        <div
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: '0.18em',
-            color: 'oklch(0.97 0.005 240 / 0.30)',
-            fontStyle: 'italic',
-            textAlign: 'center',
-            marginBottom: '18px',
-            animation: 'title-rise 1s 1.1s ease-out both',
-          }}
-        >
-          "Let your platforming skills decide my hiring fate"
-        </div>
-
-        {/* Amber divider with center glow */}
-        <div
-          style={{
-            width: '100%',
-            maxWidth: '420px',
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent 0%, oklch(0.82 0.16 65 / 0.25) 30%, oklch(0.82 0.16 65 / 0.45) 50%, oklch(0.82 0.16 65 / 0.25) 70%, transparent 100%)',
-            marginBottom: '18px',
-            animation: 'title-rise 1s 1.2s ease-out both',
-          }}
-        />
-
-        {/* CONTROLS label */}
-        <div
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '8px',
-            letterSpacing: '0.40em',
-            color: 'oklch(0.82 0.16 65 / 0.35)',
-            textTransform: 'uppercase',
-            marginBottom: '14px',
-            animation: 'title-rise 1s 1.3s ease-out both',
-          }}
-        >
-          ── CONTROLS ──
-        </div>
-
-        {/* Control rows */}
-        {[
-          {
-            keys: ['A', 'D', '←', '→'],
-            sep: '·',
-            action: 'MOVE',
-            delay: '1.35s',
-          },
-          {
-            keys: ['W', 'SPC', '↑'],
-            sep: '·',
-            action: 'JUMP',
-            delay: '1.45s',
-          },
-        ].map(({ keys, sep, action, delay }) => (
-          <div
-            key={action}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '8px',
-              animation: `title-rise 1s ${delay} ease-out both`,
-            }}
-          >
-            {/* Key-cap indicators */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', minWidth: '160px' }}>
-              {keys.map((k, i) => (
-                <React.Fragment key={k}>
-                  {i > 0 && i === Math.floor(keys.length / 2) && (
-                    <span style={{ fontFamily: 'monospace', fontSize: '8px', color: 'oklch(0.82 0.16 65 / 0.25)', margin: '0 2px' }}>{sep}</span>
-                  )}
-                  <span
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '8px',
-                      letterSpacing: '0.05em',
-                      color: 'oklch(0.88 0.14 72 / 0.80)',
-                      border: '1px solid oklch(0.82 0.16 65 / 0.30)',
-                      background: 'oklch(0.82 0.16 65 / 0.06)',
-                      borderRadius: '3px',
-                      padding: '2px 5px',
-                      lineHeight: 1.4,
-                      boxShadow: '0 1px 0 oklch(0.82 0.16 65 / 0.20), inset 0 1px 0 oklch(1 0 0 / 0.06)',
-                    }}
-                  >
-                    {k}
-                  </span>
-                </React.Fragment>
-              ))}
-            </div>
-
-            {/* Amber arrow */}
-            <span style={{ color: 'oklch(0.82 0.16 65 / 0.40)', fontSize: '9px' }}>▸</span>
-
-            {/* Action label */}
-            <span
-              style={{
-                fontFamily: 'monospace',
-                fontSize: '9px',
-                letterSpacing: '0.22em',
-                color: 'oklch(0.97 0.005 240 / 0.38)',
-                textTransform: 'uppercase',
-                minWidth: '60px',
-              }}
-            >
-              {action}
-            </span>
-          </div>
+            key={`${top}-${left}`}
+            className="absolute"
+            style={{ top: `${top}%`, left: `${left}%`, width: size, height: size, background: color, opacity }}
+          />
         ))}
-
-        {/* Explore instruction */}
-        <div
-          style={{
-            marginTop: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            animation: 'title-rise 1s 1.55s ease-out both',
-          }}
-        >
-          <div style={{ height: '1px', width: '24px', background: 'oklch(0.82 0.16 65 / 0.15)' }} />
-          <span
-            style={{
-              fontFamily: '"Press Start 2P", monospace',
-              fontSize: '7px',
-              letterSpacing: '0.12em',
-              color: 'oklch(0.82 0.16 65 / 0.45)',
-              textTransform: 'uppercase',
-            }}
-          >
-            Bump blocks from below to explore sections
+        {TITLE_SPARKLES.map(([top, left, color, opacity]) => (
+          <span key={`${top}-${left}`} className="absolute h-3 w-3" style={{ top: `${top}%`, left: `${left}%`, opacity }}>
+            <span className="absolute left-0 top-1 h-1 w-3" style={{ background: color }} />
+            <span className="absolute left-1 top-0 h-3 w-1" style={{ background: color }} />
           </span>
-          <div style={{ height: '1px', width: '24px', background: 'oklch(0.82 0.16 65 / 0.15)' }} />
+        ))}
+      </div>
+
+      {/* Moon (the wrapper animates, so the animation's filter doesn't replace the moon's glow) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-6 top-6 md:right-16 md:top-14 lg:right-24 lg:top-16"
+        style={{ animation: 'title-rise 1s 0.35s ease-out both' }}
+      >
+        <svg
+          viewBox="0 0 16 16"
+          className="h-16 w-16 md:h-32 md:w-32 lg:h-40 lg:w-40"
+          style={{ shapeRendering: 'crispEdges', filter: 'drop-shadow(0 0 24px rgba(255, 226, 150, 0.26))' }}
+        >
+          {MOON.flatMap(([fill, rects]) =>
+            rects.map(([x, y, w, h = 1]) => <rect key={`${fill}${x},${y}`} x={x} y={y} width={w} height={h} fill={fill} />),
+          )}
+        </svg>
+      </div>
+
+      {/* Name */}
+      <h1
+        className="relative whitespace-nowrap px-8 pt-28 font-display font-bold uppercase leading-[0.86] tracking-[-0.03em] md:px-16 md:pt-20 lg:px-20 lg:pt-24"
+        style={{ fontSize: 'clamp(2.75rem, 14vw, 16.5rem)', animation: 'title-rise 1s 0.15s ease-out both' }}
+      >
+        <span className="block pr-[0.05em]" style={nameLine}>Vansh</span>
+        <span className="-mt-[0.04em] block pr-[0.05em]" style={nameLine}>Srivastava</span>
+      </h1>
+
+      {/* Credits (left) and the prompt with controls (right) */}
+      <div
+        className="relative flex flex-col justify-between gap-8 px-8 pb-10 font-mono md:flex-row md:items-end md:px-16 md:pb-14 lg:px-20 lg:pb-16"
+        style={{ animation: 'title-rise 1s 0.6s ease-out both' }}
+      >
+        <div className="text-[12px] leading-relaxed tracking-[0.22em] md:text-[13px]">
+          <p className="mb-1 font-medium" style={{ color: SILVER }}>GAME DESIGNER</p>
+          <p className="mb-2" style={{ color: PALE, opacity: 0.8 }}>A PLAYABLE PORTFOLIO</p>
+          <p className="tracking-[0.14em]" style={{ color: PALE, opacity: 0.5 }}>
+            “Let your platforming skills decide my hiring fate”
+          </p>
+        </div>
+        <div className="max-w-md md:text-right">
+          <span
+            className="inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.2em] md:text-base"
+            style={{ color: SILVER, animation: 'press-key-breathe 2.4s ease-in-out infinite' }}
+          >
+            PRESS ENTER <span className="text-xs">▸</span>
+          </span>
+          <p className="mt-0.5 text-[12px] tracking-[0.15em]" style={{ color: PALE, opacity: 0.5 }}>(or click anywhere)</p>
+          <p className="mt-4 text-[12px] leading-normal tracking-[0.12em]" style={{ color: PALE, opacity: 0.45 }}>
+            A D / ← → move · W / Space / ↑ jump · bump blocks from below to open sections
+          </p>
         </div>
       </div>
     </div>

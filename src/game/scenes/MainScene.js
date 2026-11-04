@@ -182,19 +182,18 @@ export default class MainScene extends Phaser.Scene {
     // Add some pixel bushes/scenery at fixed coordinates on the ground
     const bushPositions = [80, 330, 512, 700, 850];
     bushPositions.forEach(x => {
-      const bush = this.add.image(x, 512, 'bush').setScale(2).setOrigin(0.5, 1);
-      bush.setTint(0x385850); // deep night-green
+      this.add.image(x, 512, 'bush').setScale(2).setOrigin(0.5, 1);
     });
 
     // 4. Create Physics Groups
     this.platforms = this.physics.add.staticGroup();
     this.blocks = this.physics.add.staticGroup();
 
-    // Create Ground Floor (Bricks) — spans the visible width and depth,
+    // Create Ground Floor (tread plates) — spans the visible width and depth,
     // rebuilt by layoutViewport() whenever the game is resized.
     this.buildGround();
 
-    // Create Separate Floating Platforms (using 32x32 brick tiles)
+    // Create Separate Floating Platforms (using 32x32 tread plates)
     const platformData = [
       // Platform 1 (Stepping stone lower left)
       { x: 136, y: 440 }, { x: 168, y: 440 },
@@ -216,12 +215,7 @@ export default class MainScene extends Phaser.Scene {
       { x: 736, y: 190 }, { x: 768, y: 190 }, { x: 800, y: 190 }
     ];
     platformData.forEach(p => {
-      this.platforms.create(p.x, p.y, 'brick');
-    });
-
-    // Apply night tint to all platform bricks
-    this.platforms.getChildren().forEach(p => {
-      p.setTint(0x7788aa); // slate-blue night tint
+      this.platforms.create(p.x, p.y, 'plate');
     });
 
     // 5. Setup Question Blocks (Intro, Projects, Experience, Resume, Contact) at scattered heights
@@ -753,39 +747,38 @@ export default class MainScene extends Phaser.Scene {
 
 
   generatePixelArtTextures() {
-    const colors = {
-      '.': null,
-      'D': '#8C5200', // Dark hair/brown shadow
-      'W': '#FFFFFF', // White
-      'Y': '#FFE018', // Yellow
-      'O': '#F87800', // Light Orange / Brown highlight
-      'G': '#000000', // Black
-      'K': '#404040', // Dark Gray
-      'H': '#909090', // Light Gray
-      'E': '#00A800', // Green bush highlight
-      'L': '#005800'  // Green bush dark shadow
-    };
+    // Each texture has its own palette; characters missing from it ('.', ' ') stay transparent.
 
-    // 1. BRICK TEXTURE (32x32)
-    const brickArt = [
-      "DDDDDDDDDDDDDDDD",
-      "DOOOOOOOOOOOOOGD",
-      "DODDDDDODDDDDOGD",
-      "DODDDDDODDDDDOGD",
-      "DOGGGGGOGGGGGOGD",
-      "DODDDDDODDDDDOGD",
-      "DOOOOOOODOOOOOGD",
-      "DDDDDODDDDDODDDD",
-      "OOOODODDDDDODDDD",
-      "DDDDDOGGGGGOGGGG",
-      "DOOOOOOODOOOOOGD",
-      "DODDDDDODDDDDOGD",
-      "DODDDDDODDDDDOGD",
-      "DOGGGGGOGGGGGOGD",
-      "DGGGGGGGGGGGGGGG",
-      "DDDDDDDDDDDDDDDD"
+    // 1. GROUND PLATE (32x32) — dark gunmetal tread plate: bevelled edge and
+    //    raised diagonal grips. It carries its own night-dark colours, so it
+    //    isn't tinted, and its cool grey sets off the warm bronze blocks.
+    const plateColors = {
+      'K': '#13161d', // Outline
+      'H': '#8d96a5', // Bevel highlight (top/left)
+      'M': '#535b6a', // Plate
+      'S': '#353b47', // Bevel shadow (bottom/right)
+      'T': '#9ea7b6', // Grip highlight
+      't': '#2c313b'  // Grip shadow
+    };
+    const plateArt = [
+      "KKKKKKKKKKKKKKKK",
+      "KHHHHHHHHHHHHHSK",
+      "KHMMMMMMMMMMMMSK",
+      "KHMTtMMMMMTtMMSK",
+      "KHMMTtMMMMMTtMSK",
+      "KHMMMMMMMMMMMMSK",
+      "KHMMMMMMMMMMMMSK",
+      "KHMMMMTtMMMMMMSK",
+      "KHMMMMMTtMMMMMSK",
+      "KHMMMMMMMMMMMMSK",
+      "KHMMMMMMMMMMMMSK",
+      "KHMTtMMMMMTtMMSK",
+      "KHMMTtMMMMMTtMSK",
+      "KHMMMMMMMMMMMMSK",
+      "KSSSSSSSSSSSSSSK",
+      "KKKKKKKKKKKKKKKK"
     ];
-    this.drawScaledTexture('brick', brickArt, colors, 2);
+    this.drawScaledTexture('plate', plateArt, plateColors, 2);
 
     // 2. QUESTION BLOCK (32x32) — a bronze lantern: riveted, bevelled frame
     //    around a warm inset with a glowing, centered "?". Has its own palette.
@@ -853,7 +846,11 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('hit_block', hitArt, spentBlockColors, 2);
 
-    // 6. BUSH SCENERY TEXTURE (64x48)
+    // 6. BUSH SCENERY TEXTURE (64x48) — deep night greens of its own, so it isn't tinted
+    const bushColors = {
+      'E': '#2f5547', // Leaves
+      'L': '#1c3631'  // Leaf shadow
+    };
     const bushArt = [
       "......EEEE......",
       "....EEEEEEEE....",
@@ -864,9 +861,9 @@ export default class MainScene extends Phaser.Scene {
       "EEL L EE L LE EE",
       "EEL L EE L LE EE"
     ];
-    this.drawScaledTexture('bush', bushArt, colors, 3);
+    this.drawScaledTexture('bush', bushArt, bushColors, 3);
 
-    // (Sky gradient, sky glow, grid and vignette are viewport-sized and live in
+    // (Sky gradient, sky glow and vignette are viewport-sized and live in
     //  generateViewportTextures(), since they depend on the current game size.)
 
     // 11. BLOCK GLOW (64x64)
@@ -886,8 +883,8 @@ export default class MainScene extends Phaser.Scene {
 
   /**
    * Fit the scene to the current game size: center the 1024×576 level with the
-   * camera, widen the physics bounds, regenerate the sky/grid/vignette at full
-   * size and extend the ground bricks. Runs once from create() and again on
+   * camera, widen the physics bounds, regenerate the sky/vignette at full
+   * size and extend the ground plates. Runs once from create() and again on
    * every Scale RESIZE (PhaserGame.js keeps the game's aspect equal to the
    * window's, so this is what removes the letterbox bars).
    */
@@ -918,14 +915,12 @@ export default class MainScene extends Phaser.Scene {
     if (!this.skyBg) {
       this.skyBg    = this.add.image(cx, cy, keys.sky).setDepth(-3);
       this.skyGlow  = this.add.image(cx, cy, keys.glow).setDepth(-2);
-      this.gridBg   = this.add.image(cx, cy, keys.grid).setDepth(-1);
       this.vignette = this.add.image(cx, cy, keys.vignette).setDepth(100);
     } else {
       this.skyBg.setTexture(keys.sky);
       this.skyGlow.setTexture(keys.glow);
-      this.gridBg.setTexture(keys.grid);
       this.vignette.setTexture(keys.vignette);
-      ['sky_bg', 'sky_glow', 'grid_bg', 'vignette'].forEach((k) => {
+      ['sky_bg', 'sky_glow', 'vignette'].forEach((k) => {
         const old = `${k}_${prev}`;
         if (this.textures.exists(old)) this.textures.remove(old);
       });
@@ -934,7 +929,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.platforms) this.buildGround();
   }
 
-  /** Brick floor covering the visible width and everything below the level's ground line. */
+  /** Tread-plate floor covering the visible width and everything below the level's ground line. */
   buildGround() {
     this.groundBricks.forEach((b) => b.destroy());
     this.groundBricks = [];
@@ -944,15 +939,13 @@ export default class MainScene extends Phaser.Scene {
     const firstCol = Math.floor((this.view.left - 16) / tile) * tile + 16;
     for (let x = firstCol; x - 16 < this.view.right; x += tile) {
       for (let y = groundTop; y - 16 < this.view.bottom; y += tile) {
-        const brick = this.platforms.create(x, y, 'brick');
-        brick.setTint(0x7788aa); // slate-blue night tint
-        this.groundBricks.push(brick);
+        this.groundBricks.push(this.platforms.create(x, y, 'plate'));
       }
     }
   }
 
   /**
-   * Draw the sky gradient, ambient glows, masked grid and vignette on canvases
+   * Draw the sky gradient, ambient glows and vignette on canvases
    * of the given size. All positions are expressed in level coordinates and
    * offset so the artwork stays anchored to the level, not the viewport.
    */
@@ -962,7 +955,6 @@ export default class MainScene extends Phaser.Scene {
     const keys = {
       sky:      `sky_bg_${version}`,
       glow:     `sky_glow_${version}`,
-      grid:     `grid_bg_${version}`,
       vignette: `vignette_${version}`,
     };
 
@@ -993,35 +985,6 @@ export default class MainScene extends Phaser.Scene {
     glow(0,    576, 30, 400, '93, 169, 255',  0.14); // bottom-left cyan bloom
     glow(1024,  50, 20, 350, '255, 154, 108', 0.10); // top-right peach glow
     skyGlowCanvas.refresh();
-
-    // GRID WITH RADIAL MASK — lines aligned to the level's 64px grid
-    const gridCanvas = this.textures.createCanvas(keys.grid, W, H);
-    const gdCtx = gridCanvas.context;
-    gdCtx.strokeStyle = 'rgba(224, 231, 255, 0.07)';
-    gdCtx.lineWidth = 1;
-    const gridSize = 64;
-    for (let x = ox % gridSize; x < W; x += gridSize) {
-      gdCtx.beginPath();
-      gdCtx.moveTo(x, 0);
-      gdCtx.lineTo(x, H);
-      gdCtx.stroke();
-    }
-    for (let y = oy % gridSize; y < H; y += gridSize) {
-      gdCtx.beginPath();
-      gdCtx.moveTo(0, y);
-      gdCtx.lineTo(W, y);
-      gdCtx.stroke();
-    }
-    gdCtx.globalCompositeOperation = 'destination-in';
-    const maskGrad = gdCtx.createRadialGradient(512 + ox, 230 + oy, 80, 512 + ox, 230 + oy, 450);
-    maskGrad.addColorStop(0, 'rgba(0, 0, 0, 1)');
-    maskGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0.8)');
-    maskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    gdCtx.fillStyle = maskGrad;
-    gdCtx.beginPath();
-    gdCtx.arc(512 + ox, 230 + oy, 500, 0, Math.PI * 2);
-    gdCtx.fill();
-    gridCanvas.refresh();
 
     // VIGNETTE OVERLAY — beyond the outer radius the last stop continues, so
     // the extended area is uniformly dark
