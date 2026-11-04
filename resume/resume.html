@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vansh Srivastava – Resume</title>
+<style>
+  @font-face { font-family: "CMU Serif"; src: url("fonts/cmunrm.ttf"); font-weight: 400; font-style: normal; }
+  @font-face { font-family: "CMU Serif"; src: url("fonts/cmunbx.ttf"); font-weight: 700; font-style: normal; }
+  @font-face { font-family: "CMU Serif"; src: url("fonts/cmunti.ttf"); font-weight: 400; font-style: italic; }
+  @font-face { font-family: "CMU Serif"; src: url("fonts/cmunbi.ttf"); font-weight: 700; font-style: italic; }
+  /* Name only */
+  @font-face { font-family: "Alex Brush"; src: url("fonts/AlexBrush-Regular.ttf"); font-weight: 400; }
+
+  @page { size: letter; margin: 0.45in 0.55in 0.4in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-variant-ligatures: none; font-family: "CMU Serif", "Times New Roman", serif; font-size: 10.5pt; line-height: 1.12; color: #000; background: #fff; }
+  a { color: inherit; text-decoration: underline; text-decoration-thickness: 0.5pt; text-underline-offset: 1.5pt; }
+
+  /* Fills the printable page; leftover height is shared evenly between sections. */
+  .page { height: calc(11in - 0.85in - 4pt); display: flex; flex-direction: column; justify-content: space-between; }
+
+  header { text-align: center; }
+  header h1 { font-family: "Alex Brush", "CMU Serif", serif; font-size: 40pt; font-weight: 400; line-height: 1; }
+  .contact { font-size: 10pt; margin-top: 2pt; }
+  .sep { margin: 0 5pt; }
+
+  section { padding-top: 3pt; }
+  h2 { font-size: 12.5pt; font-weight: 400; font-variant: small-caps; letter-spacing: 0.3pt;
+       border-bottom: 0.6pt solid #000; padding-bottom: 1pt; margin-bottom: 3pt; }
+
+  .entry { margin: 0 0 3pt 10pt; }
+  .entry:last-child { margin-bottom: 0; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 14pt; }
+  .row .r { white-space: nowrap; padding-right: 2pt; }
+  .row.sub { font-size: 10pt; font-style: italic; }
+  .tech { font-style: italic; font-size: 10pt; }
+  .links { font-size: 10pt; }
+
+  ul.bullets { margin-top: 1.5pt; padding-left: 17pt; font-size: 10pt; list-style: none; }
+  ul.bullets li { position: relative; margin-bottom: 0.5pt; }
+  ul.bullets li::before { content: "–"; position: absolute; left: -10pt; }
+
+  ul.skills { list-style: none; margin-left: 10pt; font-size: 10pt; }
+  ul.skills li { margin-bottom: 1.5pt; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>Vansh Srivastava</h1>
+  <div class="contact">
+    <a href="tel:+917905620740">+91 79056 20740</a><span class="sep">|</span>
+    <a href="mailto:vanshsrivastavaqa@gmail.com">vanshsrivastavaqa@gmail.com</a><span class="sep">|</span>
+    Portfolio: <a href="https://whenom-interactive.vercel.app/">whenom-interactive.vercel.app</a>
+  </div>
+  <div class="contact">
+    <a href="https://www.linkedin.com/in/vansh-srivastava-whenom/">linkedin.com/in/vansh-srivastava-whenom</a><span class="sep">|</span>
+    <a href="https://github.com/whenommmm">github.com/whenommmm</a><span class="sep">|</span>
+    <a href="https://whenommm.itch.io/">whenommm.itch.io</a>
+  </div>
+</header>
+
+<section>
+  <h2>Education</h2>
+  <div class="entry">
+    <div class="row"><b>Birla Institute of Technology and Science, Pilani</b><span class="r">Pilani, India</span></div>
+    <div class="row sub"><span>Bachelor of Science in Computer Science</span><span class="r">Aug 2024 – Aug 2027</span></div>
+  </div>
+  <div class="entry">
+    <div class="row"><b>City Montessori School</b><span class="r">Lucknow, India</span></div>
+    <div class="row sub"><span>Class XII</span><span class="r">Apr 2009 – Apr 2024</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Portfolio</h2>
+  <div class="entry">
+    <div class="row">
+      <span><b>Playable Portfolio Website</b> | <span class="tech">React, Phaser 4, Vite, Tailwind CSS</span> |
+        <span class="links"><a href="https://whenom-interactive.vercel.app/">Visit</a> · <a href="https://github.com/whenommmm/portfolio-website">Code</a></span></span>
+      <span class="r">May 2026</span>
+    </div>
+    <ul class="bullets">
+      <li>Built a portfolio whose homepage is a playable pixel-art platformer; bumping question blocks opens each page.</li>
+      <li>Bridged Phaser and React Router with an event bus, keeping one persistent game that pauses while hidden.</li>
+      <li>Drew pixel-art textures in code, synthesized sound with the Web Audio API, and scaled the level to any window.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Projects</h2>
+
+  <div class="entry">
+    <div class="row">
+      <span><b>Monsters Inc. (#43 of 207 overall)</b> | <span class="tech">Unity, C#, WebGL, Game Jam</span> |
+        <span class="links"><a href="https://whenommm.itch.io/monsters-inc">Play</a> · <a href="https://itch.io/jam/bezi-mega-jam-1/rate/5068009">Results</a></span></span>
+      <span class="r">Sep 2026</span>
+    </div>
+    <ul class="bullets">
+      <li>Crossed block-pushing puzzles with tower defense: crush monsters with blocks or power outlets that zap them.</li>
+      <li>Designed 10 rooms with one exact solution each; monsters path around blocks, or chew through when boxed in.</li>
+      <li>Showed each room’s full monster schedule up front, with unlimited undo, so players plan rather than guess.</li>
+      <li>Ranked #43 of 207 overall (top 21%) and #25 in Scope &amp; Completion at Bezi Mega Jam 2026; made solo.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="row">
+      <span><b>Griddle</b> | <span class="tech">Unity 6, C#, .NET, WebGL</span> |
+        <span class="links"><a href="https://whenommm.itch.io/playgriddle">Play</a> · <a href="https://github.com/whenommmm/griddle">Code</a></span></span>
+      <span class="r">Sep 2026</span>
+    </div>
+    <ul class="bullets">
+      <li>Built a clue-less crossword where players guess words Wordle-style and each solve reveals crossing letters; ships with a 20-level campaign, date-seeded daily puzzles with streaks, and an endless mode.</li>
+      <li>Wrote a procedural level generator that lays out interlocking grids, mines provably true hint rules from each word set, and estimates par with a solver bot that plays through the real game logic.</li>
+      <li>Added a fairness audit that simulates solve orders so crossing letters never give away an unguessed word.</li>
+      <li>Kept the game core in pure C# with no Unity dependencies and covered it with 150+ automated test checks.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="row">
+      <span><b>PongPing (#120 of 517 in Enjoyment)</b> | <span class="tech">Unity, C#, WebGL, Game Jam</span> |
+        <span class="links"><a href="https://whenommm.itch.io/pongping">Play</a> · <a href="https://github.com/whenommmm/PongPing">Code</a></span></span>
+      <span class="r">Mar 2026</span>
+    </div>
+    <ul class="bullets">
+      <li>Built a reverse-Pong game where the player steers the ball and keeps hitting AI paddles that shrink on each hit.</li>
+      <li>Wrote paddle AI with randomized patrols that eases off near the ball, plus hit-position-based bounce angles.</li>
+      <li>Ramped ball speed over time with a cyan-to-red speed trail; added 3 difficulty presets and a saved high score.</li>
+      <li>Ranked #120 in Enjoyment (top 24%) and #228 overall of 517 ranked entries at Bad Ideas Game Jam 2026.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="row">
+      <span><b>FallingBlocks</b> | <span class="tech">Unity, C#, WebGL</span> |
+        <span class="links"><a href="https://whenommmm.github.io/falling-blocks-build/">Play</a> · <a href="https://github.com/whenommmm/falling-blocks">Code</a></span></span>
+      <span class="r">Feb 2026</span>
+    </div>
+    <ul class="bullets">
+      <li>Built a 2D survival game where the player dodges blocks spawned with random position, size, speed, and rotation.</li>
+      <li>Ramped spawn rate and fall speed over 60 seconds, and built an event-driven (C# Action) game-over flow.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="row">
+      <span><b>SphereRunner</b> | <span class="tech">Unity, C#, 3D Physics</span> |
+        <span class="links"><a href="https://github.com/whenommmm/SphereRunner">Code</a></span></span>
+      <span class="r">Aug 2025</span>
+    </div>
+    <ul class="bullets">
+      <li>Built a physics-driven obstacle runner across 3 levels and an endless mode, moved entirely by Rigidbody forces.</li>
+      <li>Scripted moving walls, trigger-spawned road sections, a follow camera, and distance-based scoring.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Experience</h2>
+
+  <div class="entry">
+    <div class="row"><b>Business Development Intern</b><span class="r">Nov 2025 – Jan 2026</span></div>
+    <div class="row sub"><span>VeritusAI</span><span class="r">Osaka, Japan — Remote</span></div>
+    <ul class="bullets">
+      <li>Led cold email and direct-message outreach campaigns to IIT professors and academic researchers.</li>
+      <li>Identified and qualified prospects, tailoring each message to the researcher’s field to explain product value.</li>
+      <li>Ran follow-ups and guided interested researchers through onboarding to drive early adoption.</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="row"><b>Beta Tester</b><span class="r">Sep 2025</span></div>
+    <div class="row sub"><span>Subatomic Forge Studios</span><span class="r"></span></div>
+    <ul class="bullets">
+      <li>Playtested pre-release builds of <i>The Space Between</i>, reporting bugs, usability issues, and balancing feedback.</li>
+      <li>Worked with the studio to improve the player experience; named in the game’s credits.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Technical Skills</h2>
+  <ul class="skills">
+    <li><b>Languages</b>: C#, Java, JavaScript, Python, SQL (MySQL), HTML/CSS</li>
+    <li><b>Engines &amp; Frameworks</b>: Unity, Phaser, Unreal Engine, GDevelop, React, Spring Boot, Tailwind CSS</li>
+    <li><b>Game Development</b>: Gameplay Programming, Procedural Generation, Game AI, Physics &amp; Collision, Level Design</li>
+    <li><b>Developer Tools</b>: Git, GitHub, VS Code, .NET CLI, Vite, Vercel, GitHub Pages, itch.io, Canva</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>

@@ -1,53 +1,16 @@
 import { motion } from 'motion/react';
 import { Download, Maximize2 } from 'lucide-react';
 import resumeImage from '@/assets/vansh-srivastava-resume.png';
+import { CinematicAtmosphere } from '../components/shared/CinematicAtmosphere';
 import { ReturnToWorld } from '../components/shared/ReturnToWorld';
+import { RESUME_LINKS } from '../resumeLinks';
 
 const RESUME_PDF_URL = '/vansh-srivastava-resume.pdf';
-
-function Particles() {
-  const particles = Array.from({ length: 24 });
-  return (
-    <div className="absolute inset-0">
-      {particles.map((_, i) => {
-        const left = (i * 37) % 100;
-        const top = (i * 53) % 100;
-        const delay = (i % 7) * 0.6;
-        const duration = 6 + (i % 5);
-        return (
-          <motion.span
-            key={i}
-            className="absolute h-[2px] w-[2px] rounded-full bg-[var(--cinematic-amber)]"
-            style={{ left: `${left}%`, top: `${top}%` }}
-            animate={{ opacity: [0, 0.6, 0], y: [0, -30, -60] }}
-            transition={{ duration, repeat: Infinity, delay, ease: 'easeInOut' }}
-          />
-        );
-      })}
-    </div>
-  );
-}
 
 export default function ResumePage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--cinematic-navy)] text-foreground">
-      {/* Atmospheric background */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--cinematic-cream) 1px, transparent 1px), linear-gradient(90deg, var(--cinematic-cream) 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
-          }}
-        />
-        <div className="absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-[var(--cinematic-glow)] opacity-[0.10] blur-[160px]" />
-        <div className="absolute -bottom-40 left-0 h-[500px] w-[500px] rounded-full bg-[var(--cinematic-amber)] opacity-[0.07] blur-[180px]" />
-        <div className="absolute -bottom-20 right-0 h-[400px] w-[600px] rounded-full bg-[oklch(0.35_0.15_265)] opacity-[0.20] blur-[160px]" />
-        <Particles />
-      </div>
-
+      <CinematicAtmosphere />
 
       {/* Hero */}
       <section className="relative z-10 mx-auto max-w-4xl px-6 pt-20 pb-12 text-center sm:pt-28">
@@ -57,13 +20,7 @@ export default function ResumePage() {
           transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur"
         >
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{
-              background: 'var(--color-amber-glow)',
-              boxShadow: '0 0 10px var(--color-amber-glow)',
-            }}
-          />
+          <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
           Career Archive • Resume
         </motion.div>
 
@@ -82,8 +39,8 @@ export default function ResumePage() {
           transition={{ duration: 0.8, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
         >
-          A snapshot of my journey through gameplay systems, creative technology,
-          and interactive development.
+          The one-page version: the games I&apos;ve designed, the jams I&apos;ve
+          entered, and where I&apos;ve worked.
         </motion.p>
 
         <motion.div
@@ -92,7 +49,7 @@ export default function ResumePage() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mx-auto mt-12 h-px w-40"
           style={{
-            background: 'linear-gradient(90deg, transparent, var(--color-amber-glow, oklch(0.82 0.16 65)) 50%, transparent)',
+            background: 'linear-gradient(90deg, transparent, var(--primary) 50%, transparent)',
             opacity: 0.6,
           }}
         />
@@ -106,7 +63,7 @@ export default function ResumePage() {
           transition={{ duration: 1.1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="relative"
         >
-          <div className="absolute -inset-8 rounded-[2rem] bg-[var(--cinematic-amber)] opacity-[0.08] blur-3xl" />
+          <div className="absolute -inset-8 rounded-[2rem] bg-primary opacity-[0.08] blur-3xl" />
 
           {/* Viewer frame */}
           <div className="relative overflow-hidden rounded-2xl border border-[var(--cinematic-cream)]/10 bg-[var(--cinematic-navy-deep)]/60 p-3 backdrop-blur-xl shadow-[var(--shadow-cinematic)]">
@@ -120,22 +77,36 @@ export default function ResumePage() {
               <div className="font-mono text-[10px] tracking-[0.3em] text-[var(--cinematic-cream)]/40">
                 ARCHIVE / VANSH_SRIVASTAVA.RESUME
               </div>
-              <div className="font-mono text-[10px] text-[var(--cinematic-amber)]/70">
+              <div className="font-mono text-[10px] text-primary/70">
                 ● LIVE
               </div>
             </div>
 
             {/* Resume image */}
             <div className="relative max-h-[80vh] w-full overflow-y-auto overflow-x-hidden rounded-b-xl bg-[oklch(0.97_0.01_85)]">
-              <motion.img
-                src={resumeImage}
-                alt="Vansh Srivastava resume"
-                className="block w-full select-none"
-                draggable={false}
-                initial={{ opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.2, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              />
+              {/* The image is a picture of the PDF, so its links are laid over the underlined text */}
+              <div className="relative">
+                <motion.img
+                  src={resumeImage}
+                  alt="Vansh Srivastava resume"
+                  className="block w-full select-none"
+                  draggable={false}
+                  initial={{ opacity: 0, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1.2, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                />
+                {RESUME_LINKS.map((link) => (
+                  <a
+                    key={`${link.href}-${link.top}`}
+                    href={link.href}
+                    target={link.href.startsWith('http') ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    aria-label={link.href.replace(/^(https?:\/\/(www\.)?|mailto:|tel:)/, '')}
+                    className="absolute z-10 rounded-sm transition-colors hover:bg-primary/25"
+                    style={{ left: `${link.left}%`, top: `${link.top}%`, width: `${link.width}%`, height: `${link.height}%` }}
+                  />
+                ))}
+              </div>
               {/* Scanline overlay */}
               <div
                 className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
@@ -161,16 +132,16 @@ export default function ResumePage() {
             download="Vansh-Srivastava-Resume.pdf"
             className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full px-7 py-3.5 text-sm font-medium tracking-wide transition-all duration-500"
             style={{
-              background: 'linear-gradient(135deg, oklch(0.97 0.03 85) 0%, oklch(0.88 0.14 72) 40%, oklch(0.79 0.16 58) 75%, oklch(0.72 0.15 45) 100%)',
-              color: 'oklch(0.18 0.04 50)',
-              boxShadow: '0 0 32px -8px oklch(0.82 0.16 65 / 0.5), 0 0 80px -20px oklch(0.82 0.14 70 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.25)',
+              backgroundImage: 'var(--gradient-primary)',
+              color: 'var(--primary-foreground)',
+              boxShadow: '0 0 32px -8px color-mix(in oklab, var(--primary) 50%, transparent), 0 0 80px -20px color-mix(in oklab, var(--primary) 30%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.25)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 50px -8px oklch(0.82 0.16 65 / 0.7), 0 0 100px -20px oklch(0.82 0.14 70 / 0.45), inset 0 1px 0 oklch(1 0 0 / 0.3)';
+              e.currentTarget.style.boxShadow = '0 0 50px -8px color-mix(in oklab, var(--primary) 70%, transparent), 0 0 100px -20px color-mix(in oklab, var(--primary) 45%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.3)';
               e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 32px -8px oklch(0.82 0.16 65 / 0.5), 0 0 80px -20px oklch(0.82 0.14 70 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.25)';
+              e.currentTarget.style.boxShadow = '0 0 32px -8px color-mix(in oklab, var(--primary) 50%, transparent), 0 0 80px -20px color-mix(in oklab, var(--primary) 30%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.25)';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
@@ -180,10 +151,10 @@ export default function ResumePage() {
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
           </a>
           <a
-            href={resumeImage}
+            href={RESUME_PDF_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--cinematic-cream)]/20 bg-[var(--cinematic-navy-deep)]/50 px-6 py-3.5 text-sm font-medium text-[var(--cinematic-cream)]/80 backdrop-blur transition-all duration-300 hover:border-[var(--cinematic-amber)]/40 hover:text-[var(--cinematic-amber)]"
+            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--cinematic-cream)]/20 bg-[var(--cinematic-navy-deep)]/50 px-6 py-3.5 text-sm font-medium text-[var(--cinematic-cream)]/80 backdrop-blur transition-all duration-300 hover:border-primary/40 hover:text-primary"
           >
             <Maximize2 className="h-4 w-4" />
             <span className="tracking-wide">View Full Resolution</span>

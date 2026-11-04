@@ -1,4 +1,5 @@
 import { Mail, Phone, ArrowUpRight } from 'lucide-react';
+import { CinematicAtmosphere } from '../components/shared/CinematicAtmosphere';
 import { ReturnToWorld } from '../components/shared/ReturnToWorld';
 
 function GithubIcon({ className }) {
@@ -66,80 +67,16 @@ const METHODS = [
 ];
 
 
-// ── Particles ─────────────────────────────────────────────────────────────────
-function Particles() {
-  const dots = Array.from({ length: 38 }, (_, i) => {
-    const sx = (i * 9301 + 49297) % 233280;
-    const sy = (i * 4096 + 12345) % 233280;
-    return {
-      i,
-      x: (sx / 233280) * 100,
-      y: (sy / 233280) * 100,
-      size: 1 + ((i * 7) % 3) * 0.5,
-      delay: (i % 9) * 0.7,
-      dur: 6 + (i % 6),
-    };
-  });
-  return (
-    <div className="absolute inset-0">
-      {dots.map((d) => (
-        <span
-          key={d.i}
-          className="absolute rounded-full animate-twinkle"
-          style={{
-            left: `${d.x}%`,
-            top: `${d.y}%`,
-            width: `${d.size}px`,
-            height: `${d.size}px`,
-            background: 'var(--cream)',
-            boxShadow: '0 0 8px color-mix(in oklab, var(--glow-amber) 60%, transparent)',
-            animationDuration: `${d.dur}s`,
-            animationDelay: `${d.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ContactPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-ink text-ink-foreground font-sans antialiased">
-      {/* Atmosphere */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse at center,black 40%,transparent 85%)',
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-[16%] h-[60rem] w-[60rem] -translate-x-1/2 rounded-full opacity-60 blur-2xl"
-          style={{ background: 'radial-gradient(closest-side,var(--glow-amber),transparent 70%)' }}
-        />
-        <div
-          className="absolute -left-40 bottom-0 h-[40rem] w-[40rem] rounded-full opacity-50 blur-3xl"
-          style={{ background: 'radial-gradient(closest-side,var(--glow-cyan),transparent 70%)' }}
-        />
-        <div
-          className="absolute -right-40 top-1/3 h-[36rem] w-[36rem] rounded-full opacity-40 blur-3xl"
-          style={{ background: 'radial-gradient(closest-side,var(--glow-amber),transparent 70%)' }}
-        />
-        <Particles />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,var(--ink)_100%)]" />
-      </div>
+      <CinematicAtmosphere />
 
       {/* Hero */}
       <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 pt-20 text-center sm:pt-28">
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: 'var(--color-amber-glow)', boxShadow: '0 0 10px var(--color-amber-glow)' }}
-          />
+          <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
           Get In Touch
         </div>
 
@@ -154,15 +91,15 @@ export default function ContactPage() {
           className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg animate-fade-in-up"
           style={{ animationDelay: '0.2s' }}
         >
-          Whether it&apos;s game development, creative technology, or interactive
-          experiences — I&apos;m always open to building interesting things.
+          Got a game that needs a designer, a jam that needs a teammate, or a
+          build that needs playtesting? I&apos;d love to hear about it.
         </p>
 
         <div
           className="mx-auto mt-12 h-px w-40 animate-fade-in-up"
           style={{
             animationDelay: '0.3s',
-            background: 'linear-gradient(to right, transparent, var(--color-amber-glow, oklch(0.82 0.16 65)) 50%, transparent)',
+            background: 'linear-gradient(to right, transparent, var(--primary) 50%, transparent)',
             opacity: 0.6,
           }}
         />
@@ -181,7 +118,7 @@ export default function ContactPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
             style={{
               background:
-                'radial-gradient(closest-side, color-mix(in oklab, var(--glow-amber) 12%, transparent), transparent 70%)',
+                'radial-gradient(closest-side, color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%)',
             }}
           />
           <div
@@ -191,7 +128,7 @@ export default function ContactPage() {
           <div
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ background: 'var(--glow-amber)', boxShadow: '0 0 24px var(--glow-amber)' }}
+            style={{ background: 'var(--primary)', boxShadow: '0 0 24px var(--primary)' }}
           />
 
           {/* Rotating HUD Rings */}
@@ -235,10 +172,10 @@ export default function ContactPage() {
                       className="group block animate-orbit-counter-slow"
                     >
                       <div className="relative flex flex-col items-center gap-2 sm:gap-3">
-                        <div className="relative grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-cream backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-glow-amber group-hover:shadow-amber-glow sm:h-24 sm:w-24">
+                        <div className="relative grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-foreground backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-primary group-hover:shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--primary)_65%,transparent)] sm:h-24 sm:w-24">
                           <m.icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />
                           <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5" />
-                          <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-glow-amber group-hover:opacity-100" />
+                          <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary group-hover:opacity-100" />
                         </div>
                         <div className="text-center">
                           <div className="font-mono text-[9px] tracking-[0.3em] text-ink-muted sm:text-[10px]">

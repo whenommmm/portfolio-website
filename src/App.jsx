@@ -11,8 +11,7 @@ import ExperiencePage from './pages/ExperiencePage';
 import ResumePage from './pages/ResumePage';
 import ContactPage from './pages/ContactPage';
 
-// Global HUD
-import CinematicHUD from './components/CinematicHUD';
+import { SECTIONS } from './sections';
 
 // ── Persistent Game Layer ─────────────────────────────────────────────────────
 function PersistentGame({ isVisible }) {
@@ -257,7 +256,7 @@ function TitleScreen({ onDismiss }) {
               textTransform: 'uppercase',
             }}
           >
-            Game Developer · Interactive Portfolio
+            Game Designer · Interactive Portfolio
           </span>
           <div style={{ height: '1px', width: '36px', background: 'oklch(0.82 0.16 65 / 0.28)' }} />
         </div>
@@ -460,6 +459,7 @@ export default function App() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
+  const accent = SECTIONS.find((s) => s.path === location.pathname)?.accent;
 
   // Title screen is shown once — Enter dismisses it and starts the game directly
   const [showTitle, setShowTitle] = useState(true);
@@ -486,20 +486,19 @@ export default function App() {
       {/* Title screen — shown once, Enter → immediate gameplay */}
       {isHome && showTitle && <TitleScreen onDismiss={dismissTitle} />}
 
-      {/* CinematicHUD — hidden on "/" by its own isHome check */}
-      <CinematicHUD />
-
-      {/* Portfolio pages render as overlays above the hidden game */}
-      <Routes>
-        <Route path="/"           element={null} />
-        <Route path="/about"      element={<AboutPage />} />
-        <Route path="/projects"   element={<ProjectsPage />} />
-        <Route path="/experience" element={<ExperiencePage />} />
-        <Route path="/resume"     element={<ResumePage />} />
-        <Route path="/contact"    element={<ContactPage />} />
-        {/* Unknown paths go back to the game instead of a blank page */}
-        <Route path="*"           element={<Navigate to="/" replace />} />
-      </Routes>
+      {/* Portfolio pages render as overlays above the hidden game, in their section's accent colour */}
+      <div className="contents" data-accent={accent}>
+        <Routes>
+          <Route path="/"           element={null} />
+          <Route path="/about"      element={<AboutPage />} />
+          <Route path="/projects"   element={<ProjectsPage />} />
+          <Route path="/experience" element={<ExperiencePage />} />
+          <Route path="/resume"     element={<ResumePage />} />
+          <Route path="/contact"    element={<ContactPage />} />
+          {/* Unknown paths go back to the game instead of a blank page */}
+          <Route path="*"           element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </>
   );
 }
