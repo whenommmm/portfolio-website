@@ -1,13 +1,16 @@
 /**
  * CinematicAtmosphere — the background behind every portfolio page.
  *
- * A night sky: deep blue that lifts slightly toward the horizon, with an
- * uneven field of stars. Mostly faint pinpricks, a few bright ones, and a
- * handful that slowly twinkle. Each star is tinted and haloed in the
- * section's accent colour. No grid.
+ * By night, a deep blue sky that lifts slightly toward the horizon, with an
+ * uneven field of stars: mostly faint pinpricks, a few bright ones, and a
+ * handful that slowly twinkle, each tinted and haloed in the section's accent
+ * colour. By day, a soft blue sky with drifting pixel clouds whose undersides
+ * pick up the section's colour (DayClouds). The sky itself is the --sky
+ * variable in index.css. No grid.
  */
 
 import { glow } from '../../accent';
+import { DayClouds } from './DayClouds';
 
 // Seeded so the sky is the same on every page and every visit.
 let seed = 7;
@@ -32,34 +35,36 @@ const STARS = Array.from({ length: 170 }, (_, i) => {
 
 export function CinematicAtmosphere() {
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-0"
-      style={{
-        background:
-          'linear-gradient(180deg, oklch(0.10 0.03 265) 0%, oklch(0.13 0.04 262) 55%, oklch(0.19 0.05 255) 100%)',
-      }}
-    >
-      {STARS.map((s) => (
-        <span
-          key={s.i}
-          className={`absolute rounded-full ${s.twinkle ? 'animate-twinkle' : ''}`}
-          style={{
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            width: `${s.size}px`,
-            height: `${s.size}px`,
-            background: `color-mix(in oklab, var(--accent-glow) ${s.tint}%, white)`,
-            // A tight bright core plus a wide soft halo
-            boxShadow: s.bright
-              ? `0 0 4px 1px ${glow()}, 0 0 18px 5px ${glow(55)}`
-              : `0 0 3px 1px ${glow(80)}, 0 0 9px 2px ${glow(45)}`,
-            opacity: s.twinkle ? undefined : s.opacity,
-            animationDuration: s.twinkle ? `${s.dur}s` : undefined,
-            animationDelay: s.twinkle ? `${s.delay}s` : undefined,
-          }}
-        />
-      ))}
-    </div>
+    <>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{ background: 'var(--sky)' }}
+      >
+        <div className="day:hidden">
+          {STARS.map((s) => (
+            <span
+              key={s.i}
+              className={`absolute rounded-full ${s.twinkle ? 'animate-twinkle' : ''}`}
+              style={{
+                left: `${s.x}%`,
+                top: `${s.y}%`,
+                width: `${s.size}px`,
+                height: `${s.size}px`,
+                background: `color-mix(in oklab, var(--accent-glow) ${s.tint}%, white)`,
+                // A tight bright core plus a wide soft halo
+                boxShadow: s.bright
+                  ? `0 0 4px 1px ${glow()}, 0 0 18px 5px ${glow(55)}`
+                  : `0 0 3px 1px ${glow(80)}, 0 0 9px 2px ${glow(45)}`,
+                opacity: s.twinkle ? undefined : s.opacity,
+                animationDuration: s.twinkle ? `${s.dur}s` : undefined,
+                animationDelay: s.twinkle ? `${s.delay}s` : undefined,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <DayClouds />
+    </>
   );
 }

@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* day: applies in the day theme (<html data-theme="day">, see src/theme.js) */
+@custom-variant day (&:where([data-theme="day"], [data-theme="day"] *));
+
 /* Jersey 10 (SIL Open Font License) — used by the in-game question-block
    labels drawn by Phaser. Loaded locally so the game can wait for it. */
 @font-face {
@@ -77,6 +80,7 @@
   --animate-fade-in:      fade-in 0.9s ease-out;
   --animate-fade-in-up:   fade-in-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-twinkle:      twinkle 6s ease-in-out infinite;
+  --animate-cloud-drift:  cloud-drift 200s linear infinite;
 
   /* ── Orbital animations for Contact Hub ── */
   --animate-orbit-slow:         orbit-rotate 80s linear infinite;
@@ -162,6 +166,10 @@
   --bg-deep: #060816;
   --bg-mid:  #0B1020;
 
+  /* ── Sky behind the section pages, and the game's letterbox edge ── */
+  --sky: linear-gradient(180deg, oklch(0.10 0.03 265) 0%, oklch(0.13 0.04 262) 55%, oklch(0.19 0.05 255) 100%);
+  --game-edge: #050816;
+
   /* ── Section accent: the atmosphere and Return to World take their
         colour from these. Amber is the default; a section swaps them through
         data-accent (see sections.js). ── */
@@ -228,6 +236,83 @@
   --accent-card:       oklch(0.80 0.03 250);
   --accent-card-light: oklch(0.96 0.008 250);
   --accent-card-deep:  oklch(0.56 0.04 258);
+}
+
+/* ============================================================
+   DAY THEME — <html data-theme="day"> (src/theme.js). Night is
+   everything above; day swaps the same tokens for a light sky.
+   ============================================================ */
+[data-theme="day"] {
+  --background:           #eef5fb;
+  --foreground:           #15213a;
+  --card:                 #ffffff;
+  --card-foreground:      #15213a;
+  --popover:              #ffffff;
+  --popover-foreground:   #15213a;
+  --primary-foreground:   #ffffff;
+  --secondary:            #e3ebf4;
+  --secondary-foreground: #15213a;
+  --muted:                #e3ebf4;
+  --muted-foreground:     #4d5b76;
+  --accent:               oklch(0.5 0.13 250);
+  --border:               rgba(21, 33, 58, 0.10);
+  --input:                rgba(21, 33, 58, 0.14);
+
+  --ink:            #f4f9fd;
+  --ink-foreground: #15213a;
+  --ink-muted:      #4d5b76;
+  --cinematic-navy: #eef5fb;
+
+  --gradient-card: linear-gradient(160deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.7) 100%);
+  --shadow-card:   0 20px 50px -30px rgba(21, 33, 58, 0.35), 0 0 0 1px rgba(21, 33, 58, 0.06);
+  --bg-deep:       #eef5fb;
+  --sky:           linear-gradient(180deg, #a9d6f5 0%, #d6ecfb 45%, #f4f9fd 100%);
+  --game-edge:     #d9eefb;
+
+  /* Section colours in a deeper shade so they read on a light background.
+     This default is Projects' (the one section without its own data-accent);
+     the others are below. */
+  --day-accent: #F15A29;
+}
+[data-theme="day"] [data-accent="teal"] { --day-accent: oklch(0.46 0.12 190); }
+[data-theme="day"] [data-accent="lime"] { --day-accent: oklch(0.56 0.15 135); }
+[data-theme="day"] [data-accent="rose"] { --day-accent: oklch(0.57 0.17 10); }
+[data-theme="day"] [data-accent="moon"] { --day-accent: #8E8CF0; }
+/* Re-declared on each section wrapper so they pick up that section's colour */
+[data-theme="day"], [data-theme="day"] [data-accent] {
+  --primary:           var(--day-accent);
+  --ring:              color-mix(in oklab, var(--day-accent) 60%, transparent);
+  --gradient-text:     linear-gradient(135deg, #15213a 0%, var(--day-accent) 70%);
+  --gradient-hero:     linear-gradient(135deg, #15213a 0%, var(--day-accent) 75%);
+  --gradient-primary:  linear-gradient(135deg, var(--day-accent) 0%, color-mix(in oklab, var(--day-accent) 80%, black) 100%);
+  --shadow-glow:       0 10px 30px -12px color-mix(in oklab, var(--day-accent) 55%, transparent);
+  --accent-glow:       var(--day-accent);
+  --accent-card:       var(--day-accent);
+  --accent-card-light: #15213a;
+  --accent-card-deep:  color-mix(in oklab, var(--day-accent) 75%, black);
+}
+/* About by day: the whole name in teal, deep into bright, so it stands out from the sky */
+[data-theme="day"] [data-accent="teal"] {
+  --gradient-text: linear-gradient(135deg, oklch(0.38 0.08 205) 0%, oklch(0.47 0.11 190) 45%, oklch(0.58 0.13 175) 100%);
+}
+
+/* ── Theme switch (src/themeTransition.js). While data-ink is set, the new
+      screen is revealed through the ink's outline, which JS redraws every
+      frame as a clip-path (hidden until the first one lands); otherwise the
+      browser's own crossfade runs. ── */
+:root[data-ink]::view-transition-old(root),
+:root[data-ink]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root[data-ink]::view-transition-new(root) {
+  clip-path: circle(0px);
+}
+/* The symbiote's goo is drawn live on its own layer above both (src/ink.js) */
+::view-transition-group(ink-goo),
+::view-transition-new(ink-goo) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /* ============================================================
@@ -309,6 +394,21 @@
     background: linear-gradient(95deg, #EAFFF7 0%, #7DDCC8 55%, #2E8C7A 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
   }
+
+  /* Day versions: the gradients above start near white, which vanishes on a
+     light page, so by day they run from navy into a deeper shade of the colour.
+     (background-image only, so the text clipping above stays.) */
+  [data-theme="day"] .text-gradient-hero  { filter: none; }
+  /* Section headings that are plain at night but take the section's gradient by day */
+  [data-theme="day"] .text-gradient-day {
+    background: var(--gradient-text);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+  [data-theme="day"] .text-gradient-amber { background-image: linear-gradient(95deg, #15213a 0%, var(--day-accent) 65%, color-mix(in oklab, var(--day-accent) 80%, black) 100%); }
+  [data-theme="day"] .text-gradient-card-amber  { background-image: linear-gradient(95deg, #3a2410 0%, #b8620f 100%); }
+  [data-theme="day"] .text-gradient-card-blue   { background-image: linear-gradient(95deg, #13294d 0%, #1e5bad 100%); }
+  [data-theme="day"] .text-gradient-card-violet { background-image: linear-gradient(95deg, #241a4f 0%, #5b3fc0 100%); }
+  [data-theme="day"] .text-gradient-card-cyan   { background-image: linear-gradient(95deg, #0f3a33 0%, #1f7a68 100%); }
 
   /* ── Glass card (cinematic-journeys) ── */
   .glass-card {
@@ -425,6 +525,11 @@
   0%, 100% { opacity: 0; }
   50% { opacity: 0.85; }
 }
+/* Across the whole width, from just off the left edge to just off the right */
+@keyframes cloud-drift {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100vw); }
+}
 @keyframes grid-drift {
   0%   { background-position: 0 0; }
   100% { background-position: 60px 60px; }
@@ -457,6 +562,56 @@
   to   { opacity: 0; pointer-events: none; }
 }
 /* Title screen — main title letter-by-letter rise */
+/* The symbiote under the day/night switch (ThemeToggle). Its tendrils are
+   drawn by sliding a dash along each path: hidden at rest, creeping out one
+   after another on hover, and snatched back quickly on leaving. */
+.toggle-tendril path {
+  /* --len is the share of the path this stroke covers (all of it by default) */
+  stroke-dasharray: var(--len, 1) 2;
+  stroke-dashoffset: var(--len, 1);
+  transition: stroke-dashoffset 0.22s ease-in;
+}
+/* Fully hidden at rest (a retracted round-ended dash would still leave a dot) */
+.toggle-tendril {
+  opacity: 0;
+  transition: opacity 0s linear 0.22s;
+}
+@media (hover: hover) {
+  .theme-toggle:hover .toggle-tendril path {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset var(--grow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--delay);
+  }
+  .theme-toggle:hover .toggle-tendril {
+    opacity: 1;
+    transition: none;
+    animation: tendril-sway 1.7s ease-in-out calc(var(--delay) + var(--grow)) infinite alternate;
+  }
+}
+/* The glossy blobs on the switch's frame swell up with a little overshoot */
+.toggle-blob {
+  transform: scale(0);
+  transition: transform 0.18s ease-in;
+}
+@media (hover: hover) {
+  .theme-toggle:hover .toggle-blob {
+    transform: scale(1);
+    transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) var(--delay);
+  }
+}
+@keyframes tendril-sway {
+  from { transform: rotate(calc(var(--sway) * -3deg)); }
+  to   { transform: rotate(calc(var(--sway) * 4deg)); }
+}
+/* The arrow beside the day/night switch taps towards it */
+@keyframes hint-nudge {
+  from { transform: translateX(0); }
+  to   { transform: translateX(6px); }
+}
+/* A ring spreading out from behind the switch */
+@keyframes hint-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to   { transform: scale(2.1); opacity: 0; }
+}
 @keyframes title-rise {
   from { opacity: 0; transform: translateY(30px) scale(0.96); filter: blur(6px); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }

@@ -12,6 +12,8 @@ import ResumePage from './pages/ResumePage';
 import ContactPage from './pages/ContactPage';
 
 import { SECTIONS } from './sections';
+import { useTheme } from './theme';
+import ThemeToggle from './components/ThemeToggle';
 
 // ── Persistent Game Layer ─────────────────────────────────────────────────────
 function PersistentGame({ isVisible }) {
@@ -46,8 +48,7 @@ function PersistentGame({ isVisible }) {
         zIndex: isVisible ? 1 : -1,
         visibility: isVisible ? 'visible' : 'hidden',
         pointerEvents: isVisible ? 'auto' : 'none',
-        background: '#050816', // matches the game sky's edge color
-
+        background: 'var(--game-edge)', // matches the game sky's edge colour, day or night
       }}
     >
       <GameContainer isMuted={isMuted} toggleMute={toggleMute} />
@@ -58,9 +59,9 @@ function PersistentGame({ isVisible }) {
 // ── Title Screen ──────────────────────────────────────────────────────────────
 //
 // Shown over the game on the first visit, laid out like an indie game's
-// poster: the name huge in moonlight silver, a pixel crescent moon, and credits
-// in the bottom corners. Enter, Space or a click fades it out and the game
-// starts.
+// poster: the name huge, a pixel moon by night or sun by day, and credits in
+// the bottom corners. Enter, Space or a click fades it out and the game starts
+// (the theme toggle above it doesn't count as a click on it).
 
 // The same moonlight gradient as the Contact page title
 const MOONLIGHT = 'linear-gradient(135deg, oklch(0.97 0.005 250) 0%, oklch(0.80 0.03 250) 50%, oklch(0.60 0.035 255) 100%)';
@@ -87,8 +88,50 @@ const MOON = [
   ['#dcb862', [[2, 7, 1, 2], [3, 4, 1], [3, 11, 1]]],
 ];
 
+// Pixel sun on the same grid, where the moon is by day: yellow core, orange
+// rim, a pale highlight and a ring of rays.
+const SUN_ROWS = [
+  '......R..R......', '...R........R...', '......OOOO......', '....OOYYYYOO....',
+  '...OYYLLYYYYO...', 'R..OYLLYYYYYO..R', '..OYYLYYYYYYYO..', '..OYYYYYYYYYYO..',
+  '..OYYYYYYYYYYO..', '..OYYYYYYYYYYO..', 'R..OYYYYYYYYO..R', '...OYYYYYYYYO...',
+  '....OOYYYYOO....', '......OOOO......', '...R........R...', '......R..R......',
+];
+const SUN_COLOURS = { Y: '#ffd84a', O: '#f2a33a', L: '#fff3b0', R: '#ffc94d' };
+// The rows as the same [colour, [x, y, width] runs] as the moon
+const SUN = Object.entries(SUN_COLOURS).map(([key, colour]) => [
+  colour,
+  SUN_ROWS.flatMap((row, y) => [...row.matchAll(new RegExp(`${key}+`, 'g'))].map((m) => [m.index, y, m[0].length])),
+]);
+
+// Everything that changes between night and day
+const TITLE_LOOK = {
+  night: {
+    sky: 'radial-gradient(circle at 85% 15%, #0e1538 0%, #060a1e 50%, #030612 100%)',
+    name: MOONLIGHT,
+    accent: SILVER,
+    hint: 'Bring back the day',
+    hintText: '#0a1030',
+    text: PALE,
+    stars: true,
+    art: MOON,
+    glow: 'drop-shadow(0 0 24px rgba(255, 226, 150, 0.26))',
+  },
+  day: {
+    sky: 'radial-gradient(circle at 86% 14%, #fff7dc 0%, #d4ecfb 22%, #a6d4f5 55%, #6fb3ea 100%)',
+    name: 'linear-gradient(135deg, #14213d 0%, #24406e 55%, #3d6296 100%)',
+    accent: '#b8620f',
+    hint: 'Try the night',
+    hintText: '#fff7dc',
+    text: '#14213d',
+    stars: false,
+    art: SUN,
+    glow: 'drop-shadow(0 0 28px rgba(255, 196, 70, 0.55))',
+  },
+};
+
 function TitleScreen({ onDismiss }) {
   const [fading, setFading] = useState(false);
+  const look = TITLE_LOOK[useTheme()];
 
   const dismiss = useCallback(() => {
     if (fading) return;
@@ -99,25 +142,27 @@ function TitleScreen({ onDismiss }) {
 
   useEffect(() => {
     const handleKey = (e) => {
+      // Enter or Space on a focused button (the theme toggle) belongs to that button
+      if (e.target instanceof Element && e.target.closest('button')) return;
       if (e.key === 'Enter' || e.key === ' ') dismiss();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [dismiss]);
 
-  const nameLine = { backgroundImage: MOONLIGHT, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+  const nameLine = { backgroundImage: look.name, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
   return (
     <div
       onClick={dismiss}
       className="fixed inset-0 z-[200] flex cursor-default select-none flex-col justify-between overflow-hidden"
       style={{
-        background: 'radial-gradient(circle at 85% 15%, #0e1538 0%, #060a1e 50%, #030612 100%)',
+        background: look.sky,
         animation: fading ? 'title-fade-out 0.6s ease-in forwards' : undefined,
       }}
     >
-      {/* Stars */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+      {/* Stars (night only) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0" hidden={!look.stars}>
         {TITLE_STARS.map(([top, left, size, color, opacity]) => (
           <span
             key={`${top}-${left}`}
@@ -133,18 +178,42 @@ function TitleScreen({ onDismiss }) {
         ))}
       </div>
 
-      {/* Moon (the wrapper animates, so the animation's filter doesn't replace the moon's glow) */}
+      {/* A label pointing at the day/night switch in the corner, and a ring
+          pulsing out from behind the switch, so nobody misses it */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-4 top-4 h-10 w-10"
+        style={{ border: `2px solid ${look.accent}`, animation: 'hint-ring 1.6s ease-out 1.2s infinite both' }}
+      />
       <div
         aria-hidden
-        className="pointer-events-none absolute right-6 top-6 md:right-16 md:top-14 lg:right-24 lg:top-16"
+        className="pointer-events-none absolute right-[4.25rem] top-4 flex h-10 items-center gap-2.5"
+        style={{ animation: 'title-rise 1s 0.9s ease-out both' }}
+      >
+        <span
+          className="retro-btn px-3 py-1 font-pixel text-xl uppercase leading-none tracking-[0.12em] md:text-2xl"
+          style={{ background: look.accent, color: look.hintText }}
+        >
+          {look.hint}
+        </span>
+        <svg viewBox="0 0 9 7" className="h-[21px] w-[27px]" style={{ shapeRendering: 'crispEdges', animation: 'hint-nudge 0.8s steps(2) infinite' }}>
+          <path d="M0 3h6v1H0zM5 1h1v1H5zM6 2h1v1H6zM7 3h1v1H7zM6 4h1v1H6zM5 5h1v1H5z" fill={look.accent} />
+        </svg>
+      </div>
+
+      {/* Moon or sun (the wrapper animates, so the animation's filter doesn't
+          replace the glow). On phones it sits below the theme toggle. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-6 top-20 md:right-16 md:top-14 lg:right-24 lg:top-16"
         style={{ animation: 'title-rise 1s 0.35s ease-out both' }}
       >
         <svg
           viewBox="0 0 16 16"
           className="h-16 w-16 md:h-32 md:w-32 lg:h-40 lg:w-40"
-          style={{ shapeRendering: 'crispEdges', filter: 'drop-shadow(0 0 24px rgba(255, 226, 150, 0.26))' }}
+          style={{ shapeRendering: 'crispEdges', filter: look.glow }}
         >
-          {MOON.flatMap(([fill, rects]) =>
+          {look.art.flatMap(([fill, rects]) =>
             rects.map(([x, y, w, h = 1]) => <rect key={`${fill}${x},${y}`} x={x} y={y} width={w} height={h} fill={fill} />),
           )}
         </svg>
@@ -165,21 +234,21 @@ function TitleScreen({ onDismiss }) {
         style={{ animation: 'title-rise 1s 0.6s ease-out both' }}
       >
         <div className="text-[12px] leading-relaxed tracking-[0.22em] md:text-[13px]">
-          <p className="mb-1 font-medium" style={{ color: SILVER }}>GAME DESIGNER</p>
-          <p className="mb-2" style={{ color: PALE, opacity: 0.8 }}>A PLAYABLE PORTFOLIO</p>
-          <p className="tracking-[0.14em]" style={{ color: PALE, opacity: 0.5 }}>
+          <p className="mb-1 font-medium" style={{ color: look.accent }}>GAME DESIGNER</p>
+          <p className="mb-2" style={{ color: look.text, opacity: 0.8 }}>A PLAYABLE PORTFOLIO</p>
+          <p className="tracking-[0.14em]" style={{ color: look.text, opacity: 0.5 }}>
             “Let your platforming skills decide my hiring fate”
           </p>
         </div>
         <div className="max-w-md md:text-right">
           <span
             className="inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.2em] md:text-base"
-            style={{ color: SILVER, animation: 'press-key-breathe 2.4s ease-in-out infinite' }}
+            style={{ color: look.accent, animation: 'press-key-breathe 2.4s ease-in-out infinite' }}
           >
             PRESS ENTER <span className="text-xs">▸</span>
           </span>
-          <p className="mt-0.5 text-[12px] tracking-[0.15em]" style={{ color: PALE, opacity: 0.5 }}>(or click anywhere)</p>
-          <p className="mt-4 text-[12px] leading-normal tracking-[0.12em]" style={{ color: PALE, opacity: 0.45 }}>
+          <p className="mt-0.5 text-[12px] tracking-[0.15em]" style={{ color: look.text, opacity: 0.5 }}>(or click anywhere)</p>
+          <p className="mt-4 text-[12px] leading-normal tracking-[0.12em]" style={{ color: look.text, opacity: 0.55 }}>
             A D / ← → move · W / Space / ↑ jump · bump blocks from below to open sections
           </p>
         </div>
@@ -236,6 +305,9 @@ export default function App() {
           <Route path="*"           element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+
+      {/* Day/night switch, top-right over everything (intro, game and pages) */}
+      <ThemeToggle />
     </>
   );
 }

@@ -6,12 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vansh Srivastava | Game Designer Portfolio</title>
     <meta name="description" content="Portfolio of Vansh Srivastava — CS student and aspiring game designer creating mechanics, puzzles and playable worlds." />
+    <!-- Day/night theme before first paint: the visitor's own choice once they've
+         used the switch; until then it follows their clock, day from 6am to 6pm
+         (see src/theme.js) -->
+    <script>
+      (function () {
+        var hour = new Date().getHours();
+        var theme = hour >= 6 && hour < 18 ? 'day' : 'night';
+        try {
+          var chosen = localStorage.getItem('theme');
+          if (chosen === 'day' || chosen === 'night') theme = chosen;
+        } catch (e) { /* storage blocked: the clock decides */ }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <!-- Google Fonts — all fonts used across the portfolio -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;600;800&family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;600;800&family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=Tiny5&family=VT323&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#060816] text-white overflow-x-hidden">
+  <body class="bg-[#060816] text-white day:bg-[#eef5fb] day:text-[#15213a] overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

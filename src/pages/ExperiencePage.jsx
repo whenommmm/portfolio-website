@@ -126,7 +126,7 @@ function Entry({ kind, date, title, role, subject, description, highlights, resu
                   className={
                     i === 0
                       ? 'group/btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-primary-foreground transition-all hover:scale-[1.03]'
-                      : 'group/btn inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/90 transition-all hover:border-white/30 hover:bg-white/[0.08]'
+                      : 'group/btn inline-flex items-center gap-1.5 rounded-full border border-white/15 day:border-foreground/12 bg-white/[0.04] day:bg-white/70 px-4 py-2 text-xs font-medium text-white/90 day:text-foreground/90 transition-all hover:border-white/30 day:hover:border-foreground/25 hover:bg-white/[0.08] day:hover:bg-white'
                   }
                   style={i === 0 ? { backgroundImage: 'var(--gradient-primary)' } : undefined}
                 >
@@ -152,7 +152,7 @@ export default function ExperiencePage() {
       <main className="relative z-10">
         {/* Hero */}
         <section className="relative mx-auto max-w-5xl px-6 pt-20 pb-16 text-center md:pt-28 md:pb-20">
-          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 day:border-foreground/12 bg-white/5 day:bg-white/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
             <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
             Quest Log • Experience
           </div>
@@ -179,7 +179,7 @@ export default function ExperiencePage() {
 
         {/* Timeline */}
         <section className="relative mx-auto max-w-3xl px-6 pb-24">
-          <div className="absolute left-8 top-4 bottom-32 w-px bg-gradient-to-b from-primary/50 via-white/10 to-transparent" />
+          <div className="absolute left-8 top-4 bottom-32 w-px bg-gradient-to-b from-primary/50 via-white/10 day:via-foreground/15 to-transparent" />
           {ENTRIES.map((entry, i) => (
             <Reveal key={entry.title} delay={i === 0 ? 350 : 80} className="mb-6 last:mb-0">
               <Entry {...entry} />
