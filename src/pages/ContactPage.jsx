@@ -75,7 +75,7 @@ export default function ContactPage() {
 
       {/* Hero */}
       <section className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 pt-20 text-center sm:pt-28">
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 day:border-foreground/12 bg-white/5 day:bg-white/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur animate-fade-in-up">
           <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
           Get In Touch
         </div>
@@ -115,7 +115,7 @@ export default function ContactPage() {
           {/* Decorative rings */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 day:border-foreground/12"
             style={{
               background:
                 'radial-gradient(closest-side, color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%)',
@@ -123,7 +123,7 @@ export default function ContactPage() {
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[30%] w-[30%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[30%] w-[30%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 day:border-foreground/12"
           />
           <div
             aria-hidden
@@ -134,11 +134,11 @@ export default function ContactPage() {
           {/* Rotating HUD Rings */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/5 animate-orbit-ring-counter"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/5 day:border-foreground/12 animate-orbit-ring-counter"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dotted border-white/10 animate-orbit-ring-slow"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[36%] w-[36%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dotted border-white/10 day:border-foreground/12 animate-orbit-ring-slow"
           />
 
           {/* Orbiting Contact Nodes wrapper */}
@@ -172,9 +172,9 @@ export default function ContactPage() {
                       className="group block animate-orbit-counter-slow"
                     >
                       <div className="relative flex flex-col items-center gap-2 sm:gap-3">
-                        <div className="relative grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-foreground backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 group-hover:bg-white/[0.06] group-hover:text-primary group-hover:shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--primary)_65%,transparent)] sm:h-24 sm:w-24">
+                        <div className="relative grid h-14 w-14 place-items-center rounded-full border border-white/10 day:border-foreground/12 bg-white/[0.03] day:bg-white/70 text-foreground backdrop-blur-xl transition-all duration-500 ease-out group-hover:-translate-y-[2px] group-hover:border-white/25 day:group-hover:border-foreground/25 group-hover:bg-white/[0.06] day:group-hover:bg-white group-hover:text-primary group-hover:shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--primary)_65%,transparent)] sm:h-24 sm:w-24">
                           <m.icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" />
-                          <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5" />
+                          <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/5 day:ring-foreground/10" />
                           <ArrowUpRight className="absolute right-2 top-2 h-3 w-3 text-ink-muted opacity-0 transition-all duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary group-hover:opacity-100" />
                         </div>
                         <div className="text-center">

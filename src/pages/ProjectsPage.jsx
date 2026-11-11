@@ -22,31 +22,31 @@ function XIcon({ className }) {
 const accentMap = {
   amber: {
     ring: 'group-hover:shadow-[0_0_80px_-10px_rgba(255,184,77,0.55)]',
-    text: 'text-[#FFB84D]',
+    text: 'text-[#FFB84D] day:text-[#b8620f]',
     border: 'group-hover:border-[#FFB84D]/40',
     from: '#FFB84D',
-    chip: 'bg-[#FFB84D]/10 text-[#FFB84D] border-[#FFB84D]/20',
+    chip: 'bg-[#FFB84D]/10 text-[#FFB84D] day:text-[#b8620f] border-[#FFB84D]/20',
   },
   blue: {
     ring: 'group-hover:shadow-[0_0_80px_-10px_rgba(93,169,255,0.55)]',
-    text: 'text-[#5DA9FF]',
+    text: 'text-[#5DA9FF] day:text-[#1e5bad]',
     border: 'group-hover:border-[#5DA9FF]/40',
     from: '#5DA9FF',
-    chip: 'bg-[#5DA9FF]/10 text-[#5DA9FF] border-[#5DA9FF]/20',
+    chip: 'bg-[#5DA9FF]/10 text-[#5DA9FF] day:text-[#1e5bad] border-[#5DA9FF]/20',
   },
   violet: {
     ring: 'group-hover:shadow-[0_0_80px_-10px_rgba(167,139,250,0.55)]',
-    text: 'text-[#B8A3FF]',
+    text: 'text-[#B8A3FF] day:text-[#5b3fc0]',
     border: 'group-hover:border-[#A78BFA]/40',
     from: '#A78BFA',
-    chip: 'bg-[#A78BFA]/10 text-[#B8A3FF] border-[#A78BFA]/20',
+    chip: 'bg-[#A78BFA]/10 text-[#B8A3FF] day:text-[#5b3fc0] border-[#A78BFA]/20',
   },
   cyan: {
     ring: 'group-hover:shadow-[0_0_80px_-10px_rgba(120,220,200,0.55)]',
-    text: 'text-[#7DDCC8]',
+    text: 'text-[#7DDCC8] day:text-[#1f7a68]',
     border: 'group-hover:border-[#7DDCC8]/40',
     from: '#7DDCC8',
-    chip: 'bg-[#7DDCC8]/10 text-[#7DDCC8] border-[#7DDCC8]/20',
+    chip: 'bg-[#7DDCC8]/10 text-[#7DDCC8] day:text-[#1f7a68] border-[#7DDCC8]/20',
   },
 };
 
@@ -57,7 +57,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
   const a = accentMap[accent];
   return (
     <article
-      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-xl transition-all duration-500 ${a.border} ${a.ring} hover:-translate-y-1`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.07] day:border-foreground/12 bg-white/[0.02] day:bg-white/70 backdrop-blur-xl transition-all duration-500 ${a.border} ${a.ring} hover:-translate-y-1`}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
@@ -69,7 +69,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
       />
 
       {/* Preview pane */}
-      <div className="relative h-44 overflow-hidden border-b border-white/[0.06]">
+      <div className="relative h-44 overflow-hidden border-b border-white/[0.06] day:border-foreground/12">
         <div
           className="absolute inset-0"
           style={{
@@ -89,7 +89,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
         >
           {index}
         </span>
-        <div className="absolute bottom-3 left-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+        <div className="absolute bottom-3 left-5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 day:text-foreground/55">
           <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: a.from }} />
           Project {index}
         </div>
@@ -119,7 +119,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
 
         <ul className="mt-5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
           {highlights.map((h) => (
-            <li key={h} className="flex items-start gap-2 text-xs text-white/70">
+            <li key={h} className="flex items-start gap-2 text-xs text-white/70 day:text-foreground/75">
               <span
                 className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full"
                 style={{ background: a.from, boxShadow: `0 0 8px ${a.from}` }}
@@ -131,12 +131,12 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
 
         {achievement && (
           <div
-            className="mt-5 rounded-lg border border-white/10 bg-white/[0.03] p-3"
+            className="mt-5 rounded-lg border border-white/10 day:border-foreground/12 bg-white/[0.03] day:bg-white/70 p-3"
             style={{ borderColor: `${a.from}30` }}
           >
             <div className="flex items-start gap-3">
               <Trophy className={`h-4 w-4 shrink-0 ${a.text}`} style={{ color: a.from }} />
-              <p className="text-pretty text-xs leading-relaxed text-white/80">{achievement}</p>
+              <p className="text-pretty text-xs leading-relaxed text-white/80 day:text-foreground/85">{achievement}</p>
             </div>
 
             {/* Per-category jam ranks */}
@@ -147,7 +147,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
               >
                 {ranks.map(([label, rank]) => (
                   <div key={label} className="flex flex-row-reverse items-baseline justify-end gap-2">
-                    <dt className="font-mono text-[9px] uppercase leading-snug tracking-wider text-white/50">{label}</dt>
+                    <dt className="font-mono text-[9px] uppercase leading-snug tracking-wider text-white/50 day:text-foreground/60">{label}</dt>
                     <dd className="w-7 shrink-0 font-display text-sm font-semibold" style={{ color: a.from }}>
                       #{rank}
                     </dd>
@@ -171,7 +171,7 @@ function ProjectCard({ index, title, tech, description, highlights, achievement,
                 className={
                   isDemo
                     ? 'group/btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium text-[#060816] transition-all hover:scale-[1.03]'
-                    : 'group/btn inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/90 transition-all hover:border-white/30 hover:bg-white/[0.08]'
+                    : 'group/btn inline-flex items-center gap-1.5 rounded-full border border-white/15 day:border-foreground/12 bg-white/[0.04] day:bg-white/70 px-4 py-2 text-xs font-medium text-white/90 day:text-foreground/90 transition-all hover:border-white/30 day:hover:border-foreground/25 hover:bg-white/[0.08] day:hover:bg-white'
                 }
                 style={
                   isDemo
@@ -345,12 +345,12 @@ export default function ProjectsPage() {
       {/* Hero */}
       <section className="relative mx-auto max-w-6xl px-6 pt-24 pb-12 text-center sm:pt-32 sm:pb-16">
         <div className="animate-fade-up">
-          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 backdrop-blur">
+          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 day:border-foreground/12 bg-white/[0.03] day:bg-white/70 px-3 py-1 backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FFB84D] opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FFB84D]" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FFB84D] opacity-75 day:bg-primary" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FFB84D] day:bg-primary" />
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/70">
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/70 day:text-foreground/75">
               Vansh Srivastava · Game Designer
             </span>
           </div>
@@ -375,11 +375,8 @@ export default function ProjectsPage() {
           </p>
 
           <div
-            className="mx-auto mt-10 h-px w-32 animate-fade-up"
-            style={{
-              animationDelay: '0.3s',
-              background: 'linear-gradient(to right, transparent, rgba(255,184,77,0.6), transparent)',
-            }}
+            className="mx-auto mt-10 h-px w-32 animate-fade-up bg-gradient-to-r from-transparent via-[rgba(255,184,77,0.6)] to-transparent day:via-primary/60"
+            style={{ animationDelay: '0.3s' }}
           />
         </div>
       </section>

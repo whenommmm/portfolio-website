@@ -18,7 +18,7 @@ export default function ResumePage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur"
+          className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 day:border-foreground/12 bg-white/5 day:bg-white/70 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-foreground/70 backdrop-blur"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
           Career Archive • Resume
@@ -154,7 +154,7 @@ export default function ResumePage() {
             href={RESUME_PDF_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--cinematic-cream)]/20 bg-[var(--cinematic-navy-deep)]/50 px-6 py-3.5 text-sm font-medium text-[var(--cinematic-cream)]/80 backdrop-blur transition-all duration-300 hover:border-primary/40 hover:text-primary"
+            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--cinematic-cream)]/20 bg-[var(--cinematic-navy-deep)]/50 px-6 py-3.5 text-sm font-medium text-[var(--cinematic-cream)]/80 backdrop-blur day:border-foreground/15 day:bg-white/70 day:text-foreground/80 transition-all duration-300 hover:border-primary/40 hover:text-primary"
           >
             <Maximize2 className="h-4 w-4" />
             <span className="tracking-wide">View Full Resolution</span>

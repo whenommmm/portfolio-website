@@ -14,7 +14,7 @@ export function ReturnToWorld({ className = 'pb-20' }) {
       <button
         type="button"
         onClick={() => navigate('/')}
-        className="group relative flex w-full max-w-sm items-stretch overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] text-left backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:border-[color:color-mix(in_oklab,var(--accent-card)_40%,transparent)] hover:shadow-[0_0_80px_-10px_color-mix(in_oklab,var(--accent-card)_55%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent-card)]"
+        className="group relative flex w-full max-w-sm items-stretch overflow-hidden rounded-2xl border border-white/[0.07] day:border-foreground/12 bg-white/[0.02] day:bg-white/70 text-left backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:border-[color:color-mix(in_oklab,var(--accent-card)_40%,transparent)] hover:shadow-[0_0_80px_-10px_color-mix(in_oklab,var(--accent-card)_55%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent-card)]"
       >
         {/* Hover wash and corner glow, as on the cards */}
         <span
@@ -29,7 +29,7 @@ export function ReturnToWorld({ className = 'pb-20' }) {
         />
 
         {/* Preview pane */}
-        <span aria-hidden className="relative grid w-20 shrink-0 place-items-center overflow-hidden border-r border-white/[0.06]">
+        <span aria-hidden className="relative grid w-20 shrink-0 place-items-center overflow-hidden border-r border-white/[0.06] day:border-foreground/12">
           <span
             className="absolute inset-0"
             style={{ background: `linear-gradient(135deg, ${card(15)} 0%, transparent 60%), radial-gradient(circle at 80% 20%, ${card(19)}, transparent 50%)` }}
@@ -46,7 +46,7 @@ export function ReturnToWorld({ className = 'pb-20' }) {
         </span>
 
         <span className="relative flex-1 px-5 py-4">
-          <span aria-hidden className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+          <span aria-hidden className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 day:text-foreground/55">
             <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: card() }} />
             Back to the game
           </span>

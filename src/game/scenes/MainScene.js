@@ -5,6 +5,7 @@ import cloudsSheetUrl from '../../assets/sprites/clouds.png';
 import starSheetUrl   from '../../assets/sprites/star.png';
 import musicUrl       from '../../assets/audio/time-for-adventure.mp3';
 import { loadMuted } from '../audioPrefs';
+import { getTheme } from '../../theme';
 
 // The level (platforms, blocks, player spawn) is authored in a fixed
 // 1024×576 coordinate space. The actual game size follows the window's aspect
@@ -16,11 +17,11 @@ export const LEVEL = { width: 1024, height: 576 };
 const STAR_FRAME   = { width: 32, height: 32 };
 const STAR_TWINKLE = { start: 0, end: 12 };
 
-// Font for the labels above the question blocks. Declared via @font-face in
-// index.css (Jersey 10, OFL). It is drawn on a 10px pixel grid, so we render
-// at an exact 2× for crisp pixels.
-const LABEL_FONT = { family: 'Jersey 10', size: '20px' };
-const LABEL_COLOR = { normal: '#ffe5b3', hover: '#ffffff' }; // warm amber-white
+// Question-block titles are drawn in Tiny5 (Google Fonts, loaded in
+// index.html), a blocky font on a 5px pixel grid: at 15px every one of its
+// pixels is exactly 3 game pixels (see pixelLabel()).
+const LABEL_FONT = { family: 'Tiny5', size: '15px', gap: 1, scale: 1 };
+const LABEL_COLOR = { normal: 0xffe5b3, hover: 0xffffff }; // warm amber-white, as tints on white lettering
 
 // Question-block tints. The block textures carry their own colours, so at rest
 // they're dimmed a touch, leaving room to brighten to full while a mouse hovers
@@ -96,6 +97,7 @@ export default class MainScene extends Phaser.Scene {
     this.pendingSection = null; // delayed navigation from a block, see openBlockSection()
     this.viewportTextureVersion = 0;
     this.groundBricks = [];
+    this.theme = getTheme(); // 'day' or 'night', see src/theme.js
   }
 
   preload() {
@@ -166,18 +168,13 @@ export default class MainScene extends Phaser.Scene {
       if (!cloudTexture.has(f.name)) cloudTexture.add(f.name, 0, f.x, f.y, f.w, f.h);
     });
     this.clouds = this.add.group();
-    for (let i = 0; i < 5; i++) {
-      const x = Phaser.Math.Between(this.view.left + 50, this.view.right - 50);
-      const y = Phaser.Math.Between(this.view.top + 40, 150);
-      const frame = Phaser.Utils.Array.GetRandom(CLOUD_FRAMES).name;
-      const cloud = this.add.image(x, y, 'clouds', frame)
-        .setScale(2)
-        .setAlpha(0.25) // moonlit faded clouds
-        .setTint(0x4a5d8a); // night slate-blue
-      // Custom property for slow drift
-      cloud.setData('speed', Phaser.Math.FloatBetween(0.1, 0.4));
-      this.clouds.add(cloud);
-    }
+    this.spreadClouds();
+
+    // The sun, shown by day in place of the stars
+    this.sun = this.add.image(0, 0, 'sun').setDepth(-1);
+    this.placeSun();
+    this.createWildlife();
+    this.applySceneryTheme();
 
     // Add some pixel bushes/scenery at fixed coordinates on the ground
     const bushPositions = [80, 330, 512, 700, 850];
@@ -252,13 +249,7 @@ export default class MainScene extends Phaser.Scene {
       block.setTint(this.blockTint(block));
 
       // Label Text above block
-      const label = this.add.text(data.x, data.y - 32, data.label, {
-        fontFamily: `"${LABEL_FONT.family}"`,
-        fontSize: LABEL_FONT.size,
-        color: LABEL_COLOR.normal,
-        stroke: '#050816', // Deep navy stroke
-        strokeThickness: 3
-      }).setOrigin(0.5);
+      const label = this.add.image(data.x, data.y - 32, this.pixelLabel(data.label)).setScale(LABEL_FONT.scale).setTint(LABEL_COLOR.normal);
       block.setData('labelText', label);
 
       // Tap/click opens the section too, so the portfolio is reachable without
@@ -423,6 +414,15 @@ export default class MainScene extends Phaser.Scene {
     };
     EventBus.on('toggle-mute', muteListener);
 
+    // Day/night switch (src/theme.js): repaint the sky and scenery in place,
+    // so the knight, spent blocks and music carry on untouched
+    const themeListener = (theme) => {
+      this.theme = theme;
+      this.refreshSky();
+      this.applySceneryTheme();
+    };
+    EventBus.on('theme-change', themeListener);
+
     const cleanup = () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutViewport, this);
       window.removeEventListener('keydown', this.handleKeyDown);
@@ -433,6 +433,7 @@ export default class MainScene extends Phaser.Scene {
       EventBus.off('game-resumed', gameResumedListener);
       EventBus.off('game-hidden', gameHiddenListener);
       EventBus.off('toggle-mute', muteListener);
+      EventBus.off('theme-change', themeListener);
       this.game.events.off(Phaser.Core.Events.HIDDEN, onTabHidden);
       this.game.events.off(Phaser.Core.Events.VISIBLE, onTabVisible);
       // Without this a restarted scene (e.g. on hot reload) would play over the old music
@@ -445,7 +446,9 @@ export default class MainScene extends Phaser.Scene {
 
   }
 
-  update() {
+  update(time, delta) {
+    this.updateWildlife(time, delta);
+
     // Cloud drift — wrap around the visible viewport edges
     this.clouds.getChildren().forEach((cloud) => {
       cloud.x += cloud.getData('speed');
@@ -710,7 +713,7 @@ export default class MainScene extends Phaser.Scene {
     block.setTint(this.blockTint(block));
 
     const label = block.getData('labelText');
-    label.setColor(hovered ? LABEL_COLOR.hover : LABEL_COLOR.normal);
+    label.setTint(hovered ? LABEL_COLOR.hover : LABEL_COLOR.normal);
 
     // Cuts a bump bounce short only if the cursor leaves mid-bounce
     this.tweens.killTweensOf([block, label]);
@@ -863,6 +866,45 @@ export default class MainScene extends Phaser.Scene {
     ];
     this.drawScaledTexture('bush', bushArt, bushColors, 3);
 
+    // 7. SUN (80x80) — shown by day: yellow core, orange rim, a pale highlight and a ring of rays
+    const sunColors = {
+      'Y': '#ffd84a', // Core
+      'O': '#f2a33a', // Rim
+      'L': '#fff3b0', // Highlight
+      'R': '#ffc94d'  // Rays
+    };
+    const sunArt = [
+      "......R..R......",
+      "...R........R...",
+      "......OOOO......",
+      "....OOYYYYOO....",
+      "...OYYLLYYYYO...",
+      "R..OYLLYYYYYO..R",
+      "..OYYLYYYYYYYO..",
+      "..OYYYYYYYYYYO..",
+      "..OYYYYYYYYYYO..",
+      "..OYYYYYYYYYYO..",
+      "R..OYYYYYYYYO..R",
+      "...OYYYYYYYYO...",
+      "....OOYYYYOO....",
+      "......OOOO......",
+      "...R........R...",
+      "......R..R......"
+    ];
+    this.drawScaledTexture('sun', sunArt, sunColors, 5);
+
+    // 8. BIRD (14x8, three wing positions) — a distant gull by day: wings up, level, down
+    const birdColors = { 'X': '#34466b' };
+    [
+      ["X.....X", ".X...X.", "..XXX..", "...X..."],
+      [".......", "XX...XX", "..XXX..", "...X..."],
+      [".......", "..XXX..", ".X.X.X.", "X.....X"],
+    ].forEach((art, i) => this.drawScaledTexture(`bird_${i}`, art, birdColors, 2));
+
+    // 9. FIREFLY (10x10) — a bright speck in a soft yellow-green halo, by night
+    const fireflyColors = { 'W': '#fbffd6', 'G': 'rgba(214, 255, 120, 0.8)', 'g': 'rgba(214, 255, 120, 0.22)' };
+    this.drawScaledTexture('firefly', [".ggg.", "gGGGg", "gGWGg", "gGGGg", ".ggg."], fireflyColors, 2);
+
     // (Sky gradient, sky glow and vignette are viewport-sized and live in
     //  generateViewportTextures(), since they depend on the current game size.)
 
@@ -907,10 +949,44 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.setScroll(this.view.left, this.view.top);
     this.physics.world.setBounds(this.view.left, this.view.top, W, H);
 
+    this.refreshSky();
+    this.placeSun();
+    if (this.clouds) this.spreadClouds();
+    if (this.fireflies) this.spreadFireflies();
+    if (this.platforms) this.buildGround();
+  }
+
+  /**
+   * Spread the clouds evenly across the visible sky: one per slot (about one
+   * per 240px of width) with a little jitter. Their drift speeds are close, so
+   * they stay spread out as they wrap around.
+   */
+  spreadClouds() {
+    const count = Math.max(4, Math.round(this.view.width / 240));
+    while (this.clouds.getLength() < count) {
+      const frame = Phaser.Utils.Array.GetRandom(CLOUD_FRAMES).name;
+      // Colour and opacity follow the theme, see applySceneryTheme()
+      const cloud = this.add.image(0, 0, 'clouds', frame).setScale(2);
+      cloud.setData('speed', Phaser.Math.FloatBetween(0.12, 0.22));
+      this.clouds.add(cloud);
+    }
+    const slot = this.view.width / this.clouds.getLength();
+    this.clouds.getChildren().forEach((cloud, i) => {
+      cloud.x = this.view.left + slot * (i + 0.5 + Phaser.Math.FloatBetween(-0.3, 0.3));
+      cloud.y = Phaser.Math.Between(this.view.top + 40, 170);
+    });
+    if (this.sun) this.applySceneryTheme(); // new clouds take on the current theme
+  }
+
+  /** Redraw the sky, its glow and the vignette for the current size and theme. */
+  refreshSky() {
+    const cx = LEVEL.width / 2;
+    const cy = LEVEL.height / 2;
+
     // Fresh textures under versioned keys so we can swap safely, then drop the old ones
     const prev = this.viewportTextureVersion;
     const next = ++this.viewportTextureVersion;
-    const keys = this.generateViewportTextures(W, H, next);
+    const keys = this.generateViewportTextures(this.view.width, this.view.height, next);
 
     if (!this.skyBg) {
       this.skyBg    = this.add.image(cx, cy, keys.sky).setDepth(-3);
@@ -925,8 +1001,162 @@ export default class MainScene extends Phaser.Scene {
         if (this.textures.exists(old)) this.textures.remove(old);
       });
     }
+  }
 
-    if (this.platforms) this.buildGround();
+  /**
+   * Where the sun sits: near the top-right of the visible sky, kept below the
+   * HUD buttons (about 80 screen px tall), which on a small screen cover more
+   * of the sky in game units.
+   */
+  sunPosition() {
+    const screenScale = this.scale.displaySize.width / this.view.width;
+    return { x: this.view.right - 150, y: this.view.top + Math.max(130, 80 / screenScale + 45) };
+  }
+
+  placeSun() {
+    const { x, y } = this.sunPosition();
+    this.sun?.setPosition(x, y);
+  }
+
+  /** Night: twinkling stars and faint moonlit clouds. Day: the sun and white clouds. */
+  applySceneryTheme() {
+    const day = this.theme === 'day';
+    this.bgStars.setVisible(!day);
+    this.clouds.getChildren().forEach((cloud) => cloud.setAlpha(day ? 0.95 : 0.25).setTint(day ? 0xffffff : 0x4a5d8a));
+    this.sun.setVisible(day);
+    this.flocks.forEach((flock) => flock.birds.forEach((bird) => bird.sprite.setVisible(day)));
+    this.fireflies.forEach((fly) => fly.sprite.setVisible(!day));
+  }
+
+  // ── Wildlife: birds by day, fireflies by night ─────────────────────────────
+
+  createWildlife() {
+    this.flocks = [];
+    this.fireflies = [];
+    this.nextFlockAt = 0;
+    this.spawnFlock(true); // one already on its way across when the game opens
+    this.spreadFireflies();
+  }
+
+  /**
+   * A small flock of gulls in a loose V, crossing the sky from one side to the
+   * other. `midway` starts it part of the way across instead of off-screen.
+   */
+  spawnFlock(midway = false) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const size = Phaser.Math.Between(2, 5);
+    const scale = Phaser.Math.FloatBetween(0.8, 1.5); // nearer flocks are bigger and quicker
+    const start = dir > 0 ? this.view.left - 40 : this.view.right + 40;
+    const flock = {
+      dir,
+      speed: 34 * scale + Phaser.Math.FloatBetween(0, 12), // px per second
+      x: midway ? Phaser.Math.Between(this.view.left + 80, this.view.right - 80) : start,
+      y: Phaser.Math.Between(this.view.top + 50, 210),
+      drift: Phaser.Math.FloatBetween(-3, 3), // slow climb or descent
+      birds: [],
+    };
+    for (let i = 0; i < size; i++) {
+      // The leader, then pairs trailing behind on alternate sides
+      const rank = Math.ceil(i / 2);
+      const side = i % 2 ? 1 : -1;
+      flock.birds.push({
+        sprite: this.add.image(0, 0, 'bird_1').setScale(scale).setAlpha(0.85).setVisible(this.theme === 'day'),
+        back: rank * (15 + Math.random() * 5) * scale,
+        up: rank * side * (9 + Math.random() * 4) * scale,
+        beat: Phaser.Math.FloatBetween(0, 1),          // where it is in its wingbeat
+        tempo: Phaser.Math.FloatBetween(2.6, 3.4),     // wingbeats per second
+        glideAt: Phaser.Math.FloatBetween(1.5, 5),     // seconds until it next holds its wings out
+        gliding: 0,
+        bob: Phaser.Math.FloatBetween(0, 6.28),
+      });
+    }
+    this.flocks.push(flock);
+  }
+
+  /** Fireflies scattered low over the ground, most of them near the bushes. */
+  spreadFireflies() {
+    const count = Math.max(10, Math.round(this.view.width / 85));
+    while (this.fireflies.length < count) {
+      this.fireflies.push({
+        sprite: this.add.image(0, 0, 'firefly').setDepth(50).setBlendMode(Phaser.BlendModes.ADD).setVisible(this.theme !== 'day'),
+        phase: Phaser.Math.FloatBetween(0, 6.28),
+        wander: Phaser.Math.FloatBetween(0.25, 0.6),   // how fast it meanders
+        reach: Phaser.Math.FloatBetween(14, 34),       // how far from home
+        blink: Phaser.Math.FloatBetween(0.5, 1.1),     // glows per second, roughly
+        size: Phaser.Math.FloatBetween(0.6, 1),
+        fleeX: 0,
+        fleeY: 0,
+      });
+    }
+    const slot = this.view.width / this.fireflies.length;
+    this.fireflies.forEach((fly, i) => {
+      fly.homeX = this.view.left + slot * (i + 0.5 + Phaser.Math.FloatBetween(-0.45, 0.45));
+      fly.homeY = Phaser.Math.Between(405, 495); // the ground's surface is at 512
+    });
+  }
+
+  updateWildlife(time, delta) {
+    const dt = Math.min(delta, 50) / 1000;
+    const t = time / 1000;
+
+    if (this.theme === 'day') {
+      // A new flock sets out every so often, with never more than two in the sky
+      if (!this.nextFlockAt) this.nextFlockAt = time + Phaser.Math.Between(5000, 9000);
+      if (time > this.nextFlockAt && this.flocks.length < 2) {
+        this.spawnFlock();
+        this.nextFlockAt = time + Phaser.Math.Between(8000, 15000);
+      }
+      this.flocks = this.flocks.filter((flock) => {
+        flock.x += flock.dir * flock.speed * dt;
+        flock.y += flock.drift * dt;
+        const gone = flock.dir > 0 ? flock.x > this.view.right + 160 : flock.x < this.view.left - 160;
+        flock.birds.forEach((bird) => {
+          // Flap, flap, flap, then hold the wings out and glide for a moment
+          bird.glideAt -= dt;
+          if (bird.glideAt < 0) {
+            bird.gliding = Phaser.Math.FloatBetween(0.5, 1.2);
+            bird.glideAt = bird.gliding + Phaser.Math.FloatBetween(2, 6);
+          }
+          bird.gliding = Math.max(0, bird.gliding - dt);
+          if (!bird.gliding) bird.beat = (bird.beat + bird.tempo * dt) % 1;
+          const frame = bird.gliding ? 1 : [0, 1, 2, 1][Math.floor(bird.beat * 4)];
+          bird.sprite.setTexture(`bird_${frame}`);
+          bird.sprite.setPosition(
+            flock.x - flock.dir * bird.back,
+            // Rises on the downstroke, sinks a little while gliding
+            flock.y + bird.up + Math.sin(t * 1.3 + bird.bob) * 2.5 + (bird.gliding ? 1.5 : 0),
+          );
+          if (gone) bird.sprite.destroy();
+        });
+        return !gone;
+      });
+      return;
+    }
+
+    this.fireflies.forEach((fly) => {
+      // Meanders round its home spot on two slow, unrelated swings
+      let x = fly.homeX + Math.sin(t * fly.wander + fly.phase) * fly.reach + Math.sin(t * fly.wander * 2.7 + fly.phase * 3) * 6;
+      let y = fly.homeY + Math.cos(t * fly.wander * 0.8 + fly.phase * 2) * fly.reach * 0.45 + Math.sin(t * fly.wander * 3.1 + fly.phase) * 4;
+      // It darts away from the knight when he comes close, then drifts back
+      if (this.player) {
+        const dx = x + fly.fleeX - this.player.x;
+        const dy = y + fly.fleeY - (this.player.y - 10);
+        const near = Math.hypot(dx, dy);
+        if (near < 70 && near > 0.01) {
+          const push = (70 - near) * 9 * dt;
+          fly.fleeX += (dx / near) * push;
+          fly.fleeY += (dy / near) * push - 14 * dt; // and up, out of reach
+        }
+      }
+      fly.fleeX *= 1 - Math.min(1, 1.2 * dt);
+      fly.fleeY *= 1 - Math.min(1, 1.2 * dt);
+      x += fly.fleeX;
+      y = Math.min(504, y + fly.fleeY);
+      // Glows in slow pulses with dark gaps between, brighter when startled
+      const glow = Math.max(0, Math.sin(t * fly.blink * 2.2 + fly.phase * 5)) ** 1.6;
+      const startled = Math.min(1, Math.hypot(fly.fleeX, fly.fleeY) / 25);
+      fly.sprite.setPosition(x, y).setAlpha(Math.min(1, 0.12 + 0.88 * Math.max(glow, startled))).setScale(fly.size * (0.8 + 0.35 * glow));
+    });
   }
 
   /** Tread-plate floor covering the visible width and everything below the level's ground line. */
@@ -945,9 +1175,10 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Draw the sky gradient, ambient glows and vignette on canvases
-   * of the given size. All positions are expressed in level coordinates and
-   * offset so the artwork stays anchored to the level, not the viewport.
+   * Draw the sky gradient, ambient glows and vignette on canvases of the given
+   * size, for the current theme. All positions are expressed in level
+   * coordinates and offset so the artwork stays anchored to the level, not the
+   * viewport.
    */
   generateViewportTextures(W, H, version) {
     const ox = (W - LEVEL.width) / 2;   // level origin inside the canvas
@@ -962,9 +1193,11 @@ export default class MainScene extends Phaser.Scene {
     const skyBgCanvas = this.textures.createCanvas(keys.sky, W, H);
     const sCtx = skyBgCanvas.context;
     const sGrad = sCtx.createLinearGradient(0, 0, 0, H);
-    sGrad.addColorStop(0, '#050816');
-    sGrad.addColorStop(0.5, '#0a0e24');
-    sGrad.addColorStop(1, '#050816');
+    const day = this.theme === 'day';
+    const sky = day ? ['#4fa3e6', '#8cc8f2', '#d9eefb'] : ['#050816', '#0a0e24', '#050816'];
+    sGrad.addColorStop(0, sky[0]);
+    sGrad.addColorStop(0.5, sky[1]);
+    sGrad.addColorStop(1, sky[2]);
     sCtx.fillStyle = sGrad;
     sCtx.fillRect(0, 0, W, H);
     skyBgCanvas.refresh();
@@ -981,24 +1214,80 @@ export default class MainScene extends Phaser.Scene {
       sgCtx.arc(x + ox, y + oy, r1 + 50, 0, Math.PI * 2);
       sgCtx.fill();
     };
-    glow(512,  -80, 50, 500, '255, 184, 77',  0.18); // top-center amber crown
-    glow(0,    576, 30, 400, '93, 169, 255',  0.14); // bottom-left cyan bloom
-    glow(1024,  50, 20, 350, '255, 154, 108', 0.10); // top-right peach glow
+    if (day) {
+      const sun = this.sunPosition();
+      glow(sun.x, sun.y, 20, 430, '255, 238, 180', 0.55); // sunlight around the sun
+    } else {
+      glow(512,  -80, 50, 500, '255, 184, 77',  0.18); // top-center amber crown
+      glow(0,    576, 30, 400, '93, 169, 255',  0.14); // bottom-left cyan bloom
+      glow(1024,  50, 20, 350, '255, 154, 108', 0.10); // top-right peach glow
+    }
     skyGlowCanvas.refresh();
 
     // VIGNETTE OVERLAY — beyond the outer radius the last stop continues, so
-    // the extended area is uniformly dark
+    // the extended area is uniformly dark (barely there by day)
     const vignetteCanvas = this.textures.createCanvas(keys.vignette, W, H);
     const vCtx = vignetteCanvas.context;
     const vGrad = vCtx.createRadialGradient(512 + ox, 288 + oy, 260, 512 + ox, 288 + oy, 620);
-    vGrad.addColorStop(0, 'rgba(5, 8, 22, 0)');
-    vGrad.addColorStop(0.6, 'rgba(5, 8, 22, 0.25)');
-    vGrad.addColorStop(1, 'rgba(5, 8, 22, 0.82)');
+    const shade = day ? ['30, 80, 130', 0.05, 0.16] : ['5, 8, 22', 0.25, 0.82];
+    vGrad.addColorStop(0, `rgba(${shade[0]}, 0)`);
+    vGrad.addColorStop(0.6, `rgba(${shade[0]}, ${shade[1]})`);
+    vGrad.addColorStop(1, `rgba(${shade[0]}, ${shade[2]})`);
     vCtx.fillStyle = vGrad;
     vCtx.fillRect(0, 0, W, H);
     vignetteCanvas.refresh();
 
     return keys;
+  }
+
+  /**
+   * A block's title as hard-edged pixel lettering: white letters with a navy
+   * outline, every pixel fully one or the other. Phaser's own text has soft
+   * edges, which smear when the small game canvas is scaled up to the screen.
+   * Returns the texture key; the colour comes from tinting the image.
+   */
+  pixelLabel(text) {
+    const key = `label-${text}`;
+    if (this.textures.exists(key)) return key;
+    const font = `${LABEL_FONT.size} "${LABEL_FONT.family}"`;
+    const probe = document.createElement('canvas').getContext('2d');
+    probe.font = font;
+    const outline = 2;
+    const { gap } = LABEL_FONT; // extra px between letters
+    const even = (n) => Math.ceil(n / 2) * 2; // so the centred image sits on whole pixels
+    // Each letter's left edge, on whole pixels
+    const starts = [];
+    let pen = 0;
+    for (const letter of text) {
+      starts.push(pen);
+      pen += Math.round(probe.measureText(letter).width) + gap;
+    }
+    const width = even(pen - gap + outline * 2 + 2);
+    const height = even(parseInt(LABEL_FONT.size, 10) + outline * 2 + 4);
+    const canvas = this.textures.createCanvas(key, width, height);
+    const ctx = canvas.context;
+    ctx.font = font;
+    ctx.textBaseline = 'middle';
+    const x = outline + 1, y = height / 2 + 1;
+    // The outline: the word stamped in navy all round where the letters will go
+    ctx.fillStyle = '#050816';
+    const write = (dx, dy) => [...text].forEach((letter, i) => ctx.fillText(letter, x + starts[i] + dx, y + dy));
+    for (let dx = -outline; dx <= outline; dx++) {
+      for (let dy = -outline; dy <= outline; dy++) write(dx, dy);
+    }
+    ctx.fillStyle = '#ffffff';
+    write(0, 0);
+    // Snap every pixel to solid white, solid navy or nothing
+    const image = ctx.getImageData(0, 0, width, height);
+    const px = image.data;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] < 120) { px[i + 3] = 0; continue; }
+      const white = px[i] + px[i + 1] + px[i + 2] > 380;
+      px[i] = white ? 255 : 5; px[i + 1] = white ? 255 : 8; px[i + 2] = white ? 255 : 22; px[i + 3] = 255;
+    }
+    ctx.putImageData(image, 0, 0);
+    canvas.refresh();
+    return key;
   }
 
   drawScaledTexture(key, data, colors, scale = 2) {

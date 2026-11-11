@@ -147,7 +147,7 @@ function Education() {
           <SectionLabel>02 — Education</SectionLabel>
         </Reveal>
         <Reveal delay={80}>
-          <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
+          <h2 className="text-gradient-day mt-4 w-fit text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
             The save points so far.
           </h2>
         </Reveal>
@@ -204,7 +204,7 @@ function TechStack() {
           <SectionLabel>03 — Tech Stack</SectionLabel>
         </Reveal>
         <Reveal delay={80}>
-          <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
+          <h2 className="text-gradient-day mt-4 w-fit text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
             The toolkit in my inventory.
           </h2>
         </Reveal>
