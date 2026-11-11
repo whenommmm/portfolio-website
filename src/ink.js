@@ -10,6 +10,13 @@
 // pull taut and drag it over. Going to day it strips off: the goo is dragged
 // back while ropes cling to the page, stretch thin, lose their grip and whip away.
 
+// Whether the last switch stopped part-way (it never does so twice in a row),
+// and which way the last stop was going. Switches alternate direction, so
+// without the second one the stops would all land on the same direction: the
+// direction that stopped last gets half the chance, to hand the other a turn.
+let hesitated = false;
+let lastStop = null;
+
 // Tuning (lengths in CSS px)
 export const INK = {
   duration: 1900, // ms for the whole spread
@@ -18,7 +25,7 @@ export const INK = {
   tendrils: 40,   // going to night: ropes that shoot ahead of the goo and latch on
   feelers: 9,     // free tentacles on the front: writhing ahead going to night, clawing back going to day
   strands: 30,    // going to day: ropes that cling to the page until they're torn off
-  hesitates: 0.4, // share of switches where it stops part-way, looks about, and carries on
+  hesitates: 0.7, // chance that it stops part-way, looks about, and carries on (never twice running)
 };
 
 // ── Shaders ──────────────────────────────────────────────────────────────────
@@ -388,7 +395,9 @@ export async function loadInk() {
      * new screen's outline as path data for clip-path. frame.duration is how
      * long the whole thing takes, in ms: longer when it hesitates part-way.
      */
-    spread({ x, y, width, height, mode, seed = Math.random() * 100, hesitate = Math.random() < INK.hesitates }) {
+    spread({ x, y, width, height, mode, seed = Math.random() * 100, hesitate = !hesitated && Math.random() < INK.hesitates * (mode === lastStop ? 0.5 : 1) }) {
+      hesitated = hesitate;
+      if (hesitate) lastStop = mode;
       const { cell } = INK;
       const pad = 2;
       const dpr = Math.min(window.devicePixelRatio || 1, INK.maxDpr);
